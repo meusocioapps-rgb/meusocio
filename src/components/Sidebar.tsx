@@ -15,6 +15,7 @@ import {
   User,
   Settings,
   HelpCircle,
+  Shield,
   X,
 } from 'lucide-react'
 import { cn, getInitials } from '@/lib/utils'
@@ -44,6 +45,7 @@ const sections = [
   {
     title: 'Conta',
     items: [
+      { href: '/admin', label: 'Admin', icon: Shield },
       { href: '/profile', label: 'Perfil', icon: User },
       { href: '/settings', label: 'Configuracoes', icon: Settings },
       { href: '/support', label: 'Ajuda', icon: HelpCircle },
@@ -92,8 +94,7 @@ export function Sidebar() {
             <div className="flex items-center gap-3">
               <svg width="36" height="36" viewBox="0 0 50 50" fill="none">
                 <circle cx="25" cy="25" r="23" fill="#2D6A4F" stroke="#52B788" strokeWidth="0.8"/>
-                <path d="M 11 37 L 11 14 L 25 26" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-                <path d="M 25 26 L 39 14" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                <path d="M 11 37 L 11 14 L 25 26 L 39 14 L 39 37" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
                 <path d="M 25 26 L 39 14 L 46 7" stroke="#F4A261" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
               </svg>
               <div className="min-w-0">

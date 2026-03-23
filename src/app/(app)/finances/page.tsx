@@ -1,22 +1,120 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import {
   useFinancialEntries,
-  useFinancialSummary,
   useCreateIncome,
+  useUpdateEntryStatus,
 } from '@/hooks/use-finances'
+import { useAppointmentsByRange } from '@/hooks/use-appointments'
 import { formatCurrency, formatDate, cn } from '@/lib/utils'
-import { Plus, X } from 'lucide-react'
+import { Plus, X, Check, Clock, ChevronLeft, ChevronRight } from 'lucide-react'
 import { toast } from '@/components/Toast'
 
-export default function FinancesPage() {
-  const { data: entries, isLoading } = useFinancialEntries()
-  const { data: summary } = useFinancialSummary()
-  const [showModal, setShowModal] = useState(false)
-  const createIncome = useCreateIncome()
+const MONTH_NAMES = [
+  'Janeiro', 'Fevereiro', 'Marco', 'Abril', 'Maio', 'Junho',
+  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+]
 
-  const incomes = (entries ?? []).filter((e) => e.type === 'income')
+function getMonthLabel(year: number, month: number) {
+  return `${MONTH_NAMES[month]} ${year}`
+}
+
+function getMonthRange(year: number, month: number) {
+  const start = `${year}-${String(month + 1).padStart(2, '0')}-01`
+  const lastDay = new Date(year, month + 1, 0).getDate()
+  const end = `${year}-${String(month + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+  return { start, end }
+}
+
+export default function FinancesPage() {
+  const now = new Date()
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear())
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth())
+  const [showModal, setShowModal] = useState(false)
+
+  const { start: monthStart, end: monthEnd } = getMonthRange(selectedYear, selectedMonth)
+  const monthKey = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}`
+
+  // Data hooks
+  const { data: entries, isLoading } = useFinancialEntries(monthKey)
+  const { data: appointments, isLoading: loadingAppointments } = useAppointmentsByRange(monthStart, monthEnd)
+  const createIncome = useCreateIncome()
+  const updateStatus = useUpdateEntryStatus()
+
+  // Paid income entries
+  const paidIncomes = useMemo(() => {
+    if (!entries) return []
+    return entries.filter((e) => e.type === 'income' && e.status === 'paid')
+  }, [entries])
+
+  // Pending income entries
+  const pendingIncomes = useMemo(() => {
+    if (!entries) return []
+    return entries.filter((e) => e.type === 'income' && e.status === 'pending')
+  }, [entries])
+
+  // Scheduled/confirmed appointments for the month
+  const scheduledAppointments = useMemo(() => {
+    if (!appointments) return []
+    return appointments.filter(
+      (a) => a.status === 'scheduled' || a.status === 'confirmed'
+    )
+  }, [appointments])
+
+  // KPI calculations
+  const totalReceived = paidIncomes.reduce((sum, e) => sum + e.amount, 0)
+
+  const totalPendingEntries = pendingIncomes.reduce((sum, e) => sum + e.amount, 0)
+  const totalScheduledAppts = scheduledAppointments.reduce(
+    (sum, a) => sum + (a.estimated_value || 0),
+    0
+  )
+  const totalToReceive = totalPendingEntries + totalScheduledAppts
+
+  const totalGeneral = totalReceived + totalToReceive
+
+  // Month navigation
+  const goToPrevMonth = () => {
+    if (selectedMonth === 0) {
+      setSelectedMonth(11)
+      setSelectedYear(selectedYear - 1)
+    } else {
+      setSelectedMonth(selectedMonth - 1)
+    }
+  }
+
+  const goToNextMonth = () => {
+    if (selectedMonth === 11) {
+      setSelectedMonth(0)
+      setSelectedYear(selectedYear + 1)
+    } else {
+      setSelectedMonth(selectedMonth + 1)
+    }
+  }
+
+  // Quick month tabs: current and 2 previous
+  const monthTabs = useMemo(() => {
+    const tabs = []
+    for (let i = 0; i < 3; i++) {
+      let m = now.getMonth() - i
+      let y = now.getFullYear()
+      if (m < 0) { m += 12; y -= 1 }
+      tabs.push({ year: y, month: m, label: getMonthLabel(y, m) })
+    }
+    return tabs
+  }, [])
+
+  const handleMarkReceived = async (id: string) => {
+    try {
+      await updateStatus.mutateAsync({ id, status: 'paid' })
+      toast('Marcado como recebido!')
+    } catch {
+      toast('Erro ao atualizar')
+    }
+  }
+
+  const loading = isLoading || loadingAppointments
 
   return (
     <div>
@@ -25,7 +123,7 @@ export default function FinancesPage() {
         <div>
           <h2 className="text-[15px] font-semibold">Receitas</h2>
           <p className="text-[11px] text-gray-400">
-            {new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+            {getMonthLabel(selectedYear, selectedMonth)}
           </p>
         </div>
         <button
@@ -37,79 +135,204 @@ export default function FinancesPage() {
         </button>
       </div>
 
+      {/* Month selector */}
+      <div className="mb-4 flex items-center gap-2">
+        <button
+          onClick={goToPrevMonth}
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50"
+        >
+          <ChevronLeft size={16} />
+        </button>
+        <div className="flex flex-1 gap-1 overflow-x-auto rounded-xl border border-gray-200 bg-white p-1">
+          {monthTabs.map((t) => (
+            <button
+              key={`${t.year}-${t.month}`}
+              onClick={() => { setSelectedYear(t.year); setSelectedMonth(t.month) }}
+              className={cn(
+                'flex-1 whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium transition-colors',
+                selectedYear === t.year && selectedMonth === t.month
+                  ? 'bg-brand-900 text-white'
+                  : 'text-gray-500 hover:bg-gray-50'
+              )}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={goToNextMonth}
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50"
+        >
+          <ChevronRight size={16} />
+        </button>
+      </div>
+
       {/* KPIs */}
-      {summary && (
-        <div className="mb-4 grid grid-cols-3 gap-3">
-          <div className="rounded-xl border border-gray-200 bg-white p-3">
-            <div className="text-[10px] font-medium text-gray-400">
-              Total recebido
-            </div>
-            <div className="mt-1 text-base font-semibold text-brand-900">
-              {formatCurrency(summary.income_paid)}
-            </div>
+      <div className="mb-4 grid grid-cols-3 gap-3">
+        <div className="rounded-xl border border-gray-200 bg-white p-3">
+          <div className="text-[10px] font-medium text-gray-400">
+            Total recebido
           </div>
-          <div className="rounded-xl border border-gray-200 bg-white p-3">
-            <div className="text-[10px] font-medium text-gray-400">
-              A receber
-            </div>
-            <div className="mt-1 text-base font-semibold text-amber-600">
-              {formatCurrency(summary.income_pending)}
-            </div>
-          </div>
-          <div className="rounded-xl border border-gray-200 bg-white p-3">
-            <div className="text-[10px] font-medium text-gray-400">
-              Total geral
-            </div>
-            <div className="mt-1 text-base font-semibold">
-              {formatCurrency(summary.income_total)}
-            </div>
+          <div className="mt-1 text-base font-semibold text-brand-900">
+            {formatCurrency(totalReceived)}
           </div>
         </div>
-      )}
+        <div className="rounded-xl border border-gray-200 bg-white p-3">
+          <div className="text-[10px] font-medium text-gray-400">
+            A receber
+          </div>
+          <div className="mt-1 text-base font-semibold text-amber-600">
+            {formatCurrency(totalToReceive)}
+          </div>
+        </div>
+        <div className="rounded-xl border border-gray-200 bg-white p-3">
+          <div className="text-[10px] font-medium text-gray-400">
+            Total geral
+          </div>
+          <div className="mt-1 text-base font-semibold">
+            {formatCurrency(totalGeneral)}
+          </div>
+        </div>
+      </div>
 
-      {/* Lista */}
-      <div className="rounded-xl border border-gray-200 bg-white">
-        {isLoading ? (
+      {/* Section: Recebido */}
+      <div className="mb-4 rounded-xl border border-gray-200 bg-white">
+        <div className="border-b border-gray-100 px-4 py-3">
+          <h3 className="text-[13px] font-semibold text-green-700">
+            Recebido
+          </h3>
+          <p className="text-[10px] text-gray-400">
+            {paidIncomes.length} entrada{paidIncomes.length !== 1 ? 's' : ''} · {formatCurrency(totalReceived)}
+          </p>
+        </div>
+        {loading ? (
           <div className="py-8 text-center text-sm text-gray-400">
             Carregando...
           </div>
-        ) : incomes.length === 0 ? (
-          <div className="py-12 text-center">
-            <div className="mb-2 text-3xl">💰</div>
+        ) : paidIncomes.length === 0 ? (
+          <div className="py-10 text-center">
             <p className="text-[13px] text-gray-400">
-              Nenhuma receita registrada
+              Nenhuma receita recebida neste mes
             </p>
           </div>
         ) : (
           <div>
-            {incomes.map((entry) => (
+            {paidIncomes.map((entry) => (
               <div
                 key={entry.id}
                 className="flex items-center justify-between border-b border-gray-50 px-4 py-3 last:border-0"
               >
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs font-medium truncate">
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-xs font-medium">
                     {entry.description}
                   </div>
                   <div className="text-[10px] text-gray-400">
                     {formatDate(entry.entry_date)}
                     {entry.client_name && ` · ${entry.client_name}`}
+                    {entry.service_name && ` · ${entry.service_name}`}
                   </div>
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex flex-shrink-0 items-center gap-2">
                   <span className="text-xs font-semibold text-brand-900">
                     {formatCurrency(entry.amount)}
                   </span>
-                  <span
-                    className={cn(
-                      'rounded-full px-2 py-0.5 text-[10px] font-medium',
-                      entry.status === 'paid'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-yellow-100 text-yellow-700'
-                    )}
-                  >
-                    {entry.status === 'paid' ? 'Recebido' : 'A receber'}
+                  <span className="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-medium text-green-700">
+                    Recebido
                   </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Section: Previsto / A Receber */}
+      <div className="rounded-xl border border-gray-200 bg-white">
+        <div className="border-b border-gray-100 px-4 py-3">
+          <h3 className="text-[13px] font-semibold text-amber-700">
+            Previsto / A Receber
+          </h3>
+          <p className="text-[10px] text-gray-400">
+            {scheduledAppointments.length + pendingIncomes.length} item{(scheduledAppointments.length + pendingIncomes.length) !== 1 ? 's' : ''} · {formatCurrency(totalToReceive)}
+          </p>
+        </div>
+        {loading ? (
+          <div className="py-8 text-center text-sm text-gray-400">
+            Carregando...
+          </div>
+        ) : scheduledAppointments.length === 0 && pendingIncomes.length === 0 ? (
+          <div className="py-10 text-center">
+            <p className="text-[13px] text-gray-400">
+              Nenhuma receita prevista neste mes
+            </p>
+          </div>
+        ) : (
+          <div>
+            {/* Scheduled/confirmed appointments */}
+            {scheduledAppointments.map((appt) => (
+              <div
+                key={`appt-${appt.id}`}
+                className="flex items-center gap-3 border-b border-gray-50 px-4 py-3 last:border-0"
+              >
+                <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-amber-100">
+                  <Clock size={13} className="text-amber-500" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="truncate text-[12px] font-medium">
+                      {appt.client_name}
+                    </span>
+                    <span className="flex-shrink-0 rounded-full bg-blue-100 px-1.5 py-0.5 text-[8px] font-semibold text-blue-600">
+                      Agendamento
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-gray-400">
+                    {appt.service_name}
+                  </div>
+                  <div className="text-[10px] text-gray-400">
+                    {formatDate(appt.scheduled_date)}
+                    {appt.scheduled_time ? ` as ${appt.scheduled_time.slice(0, 5)}` : ''}
+                  </div>
+                </div>
+                <div className="flex flex-shrink-0 items-center gap-2">
+                  <span className="text-[13px] font-semibold text-amber-600">
+                    {formatCurrency(appt.estimated_value)}
+                  </span>
+                </div>
+              </div>
+            ))}
+
+            {/* Pending income entries */}
+            {pendingIncomes.map((entry) => (
+              <div
+                key={`entry-${entry.id}`}
+                className="flex items-center gap-3 border-b border-gray-50 px-4 py-3 last:border-0"
+              >
+                <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-yellow-100">
+                  <Clock size={13} className="text-yellow-500" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-[12px] font-medium">
+                    {entry.description}
+                  </div>
+                  <div className="text-[10px] text-gray-400">
+                    {formatDate(entry.entry_date)}
+                    {entry.client_name && ` · ${entry.client_name}`}
+                    {entry.service_name && ` · ${entry.service_name}`}
+                  </div>
+                </div>
+                <div className="flex flex-shrink-0 items-center gap-2">
+                  <span className="text-[13px] font-semibold text-amber-600">
+                    {formatCurrency(entry.amount)}
+                  </span>
+                  <button
+                    onClick={() => handleMarkReceived(entry.id)}
+                    disabled={updateStatus.isPending}
+                    className="flex h-6 w-6 items-center justify-center rounded-md border border-gray-200 text-gray-400 hover:border-green-500 hover:bg-green-50 hover:text-green-600 disabled:opacity-50"
+                    title="Marcar como recebido"
+                  >
+                    <Check size={12} />
+                  </button>
                 </div>
               </div>
             ))}
@@ -125,7 +348,7 @@ export default function FinancesPage() {
         >
           <div className="w-full max-w-md rounded-t-2xl bg-white md:rounded-2xl">
             <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
-              <h3 className="text-[15px] font-semibold">💵 Nova Receita</h3>
+              <h3 className="text-[15px] font-semibold">Nova Receita</h3>
               <button
                 onClick={() => setShowModal(false)}
                 className="text-gray-400"
@@ -145,7 +368,7 @@ export default function FinancesPage() {
                   status: fd.get('status') as 'paid' | 'pending',
                 })
                 setShowModal(false)
-                toast('✅ Receita registrada!')
+                toast('Receita registrada!')
               }}
               className="p-5"
             >

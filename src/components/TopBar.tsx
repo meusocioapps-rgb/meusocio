@@ -22,6 +22,7 @@ const titles: Record<string, string> = {
   '/overview': 'Overview',
   '/profile': 'Meu Perfil',
   '/support': 'Ajuda',
+  '/admin': 'Administração',
 }
 
 export function TopBar() {
@@ -222,8 +223,7 @@ export function TopBar() {
         >
           <svg width="32" height="32" viewBox="0 0 50 50" fill="none">
             <circle cx="25" cy="25" r="23" fill="#2D6A4F" stroke="#52B788" strokeWidth="0.8"/>
-            <path d="M 11 37 L 11 14 L 25 26" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-            <path d="M 25 26 L 39 14" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+            <path d="M 11 37 L 11 14 L 25 26 L 39 14 L 39 37" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
             <path d="M 25 26 L 39 14 L 46 7" stroke="#F4A261" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
           </svg>
         </Link>
