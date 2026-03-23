@@ -151,6 +151,8 @@ export interface DashboardStats {
 
 export interface NextAppointment {
   id: string
+  client_id?: string
+  service_id?: string
   client_name: string
   client_phone: string | null
   service_name: string

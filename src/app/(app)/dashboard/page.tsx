@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import {
   useDashboardStats,
@@ -29,6 +30,9 @@ import {
   Clock,
   Plus,
 } from 'lucide-react'
+import { AppointmentModal } from '@/components/AppointmentModal'
+import { PostAppointmentModal } from '@/components/PostAppointmentModal'
+import type { AppointmentWithClient } from '@/lib/types'
 
 export default function DashboardPage() {
   const { data: stats, isLoading: loadingStats } = useDashboardStats()
@@ -38,6 +42,13 @@ export default function DashboardPage() {
   const { data: summary } = useFinancialSummary()
   const { data: clients } = useClients()
   const confirmMutation = useConfirmAppointment()
+
+  // Modal state
+  const [selectedAppt, setSelectedAppt] = useState<AppointmentWithClient | null>(null)
+  const [postApptData, setPostApptData] = useState<{
+    appointment: AppointmentWithClient
+    isFreeReturn: boolean
+  } | null>(null)
 
   const recurrentCount = clients?.filter((c) => c.is_recurrent).length ?? 0
   const reactivateCount = clients?.filter((c) => c.needs_reactivation).length ?? 0
@@ -127,6 +138,64 @@ export default function DashboardPage() {
               className="rounded-lg border border-white/30 bg-white/20 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/30"
             >
               ✓ Confirmar
+            </button>
+            <button
+              onClick={() => {
+                setSelectedAppt({
+                  id: next.id,
+                  client_id: next.client_id ?? '',
+                  service_id: next.service_id ?? '',
+                  scheduled_date: next.scheduled_date,
+                  scheduled_time: next.scheduled_time,
+                  estimated_value: next.estimated_value,
+                  final_value: next.estimated_value,
+                  status: 'scheduled',
+                  is_free_return: false,
+                  notes: null,
+                  upsell_service: null,
+                  upsell_value: 0,
+                  next_return: null,
+                  completed_at: null,
+                  user_id: '',
+                  created_at: '',
+                  updated_at: '',
+                  client_name: next.client_name,
+                  client_phone: next.client_phone,
+                  service_name: next.service_name,
+                })
+              }}
+              className="rounded-lg border border-white/30 bg-white/20 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/30"
+            >
+              ↺ Remarcar
+            </button>
+            <button
+              onClick={() => {
+                setSelectedAppt({
+                  id: next.id,
+                  client_id: next.client_id ?? '',
+                  service_id: next.service_id ?? '',
+                  scheduled_date: next.scheduled_date,
+                  scheduled_time: next.scheduled_time,
+                  estimated_value: next.estimated_value,
+                  final_value: next.estimated_value,
+                  status: 'scheduled',
+                  is_free_return: false,
+                  notes: null,
+                  upsell_service: null,
+                  upsell_value: 0,
+                  next_return: null,
+                  completed_at: null,
+                  user_id: '',
+                  created_at: '',
+                  updated_at: '',
+                  client_name: next.client_name,
+                  client_phone: next.client_phone,
+                  service_name: next.service_name,
+                })
+              }}
+              className="rounded-lg border border-white/30 bg-white/20 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/30"
+            >
+              ✗ Cancelou / Faltou
             </button>
             {next.client_phone && (
               <a
@@ -220,7 +289,8 @@ export default function DashboardPage() {
               {todayAppts.map((a) => (
                 <div
                   key={a.id}
-                  className="flex items-center justify-between border-b border-gray-50 py-2 last:border-0"
+                  onClick={() => setSelectedAppt(a)}
+                  className="flex cursor-pointer items-center justify-between border-b border-gray-50 py-2 transition-colors hover:bg-gray-50 last:border-0"
                 >
                   <div>
                     <div className="text-xs font-medium">
@@ -314,6 +384,30 @@ export default function DashboardPage() {
           </Link>
         </div>
       </div>
+
+      {/* Modal de Atendimento */}
+      {selectedAppt && (
+        <AppointmentModal
+          appointment={selectedAppt}
+          onClose={() => setSelectedAppt(null)}
+          onCompleted={(result) => {
+            setPostApptData({
+              appointment: selectedAppt,
+              isFreeReturn: result.isFreeReturn,
+            })
+            setSelectedAppt(null)
+          }}
+        />
+      )}
+
+      {/* Modal Pós-Atendimento */}
+      {postApptData && (
+        <PostAppointmentModal
+          appointment={postApptData.appointment}
+          isFreeReturn={postApptData.isFreeReturn}
+          onClose={() => setPostApptData(null)}
+        />
+      )}
     </div>
   )
 }
