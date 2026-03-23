@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { Providers } from './providers'
+import { CookieConsent } from '@/components/CookieConsent'
 
 export const metadata: Metadata = {
   title: 'Meu Socio',
@@ -30,7 +31,10 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className="bg-gray-50 text-gray-900 antialiased">
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <CookieConsent />
+        </Providers>
       </body>
     </html>
   )

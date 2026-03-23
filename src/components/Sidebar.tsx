@@ -29,10 +29,10 @@ const baseSections = [
     title: 'Principal',
     items: [
       { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-      { href: '/overview', label: 'Overview', icon: BarChart3 },
+      { href: '/schedule/new', label: 'Novo Atendimento', icon: PlusCircle },
       { href: '/clients', label: 'Clientes', icon: Users },
       { href: '/schedule', label: 'Agenda', icon: Calendar },
-      { href: '/schedule/new', label: 'Novo Atendimento', icon: PlusCircle },
+      { href: '/overview', label: 'Visao Geral', icon: BarChart3 },
     ],
   },
   {
