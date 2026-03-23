@@ -79,7 +79,8 @@ export function Sidebar() {
         className={cn(
           // Base styles
           'fixed top-0 left-0 bottom-0 z-[99] flex w-[240px] flex-col bg-brand-900 transition-transform duration-200 flex-shrink-0',
-          // Mobile: slide in/out
+          // Mobile: full height with safe area
+          'h-[100dvh]',
           drawerOpen ? 'translate-x-0' : '-translate-x-full',
           // Desktop: always visible, static positioning
           'md:static md:translate-x-0 md:h-screen'
@@ -108,10 +109,10 @@ export function Sidebar() {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 overflow-y-auto py-2">
+        <nav className="flex-1 overflow-y-auto py-1 scrollbar-thin">
           {sections.map((section) => (
             <div key={section.title}>
-              <div className="px-4 pb-1 pt-3 text-[9px] font-semibold uppercase tracking-widest text-brand-300/40">
+              <div className="px-4 pb-0.5 pt-2 text-[9px] font-semibold uppercase tracking-widest text-brand-300/40">
                 {section.title}
               </div>
               {section.items.map((item) => {
@@ -123,13 +124,13 @@ export function Sidebar() {
                     href={item.href}
                     onClick={handleLinkClick}
                     className={cn(
-                      'flex items-center gap-2.5 border-l-2 px-4 py-2 text-xs transition-all',
+                      'flex items-center gap-2.5 border-l-2 px-4 py-2.5 text-[13px] transition-all min-h-[44px]',
                       isActive
                         ? 'border-brand-500 bg-white/10 font-medium text-white'
                         : 'border-transparent text-brand-300/75 hover:bg-white/5 hover:text-white'
                     )}
                   >
-                    <Icon size={15} className="opacity-85 flex-shrink-0" />
+                    <Icon size={16} className="opacity-85 flex-shrink-0" />
                     {item.label}
                   </Link>
                 )

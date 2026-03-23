@@ -111,13 +111,13 @@ export function TopBar() {
   }
 
   return (
-    <header className="sticky top-0 z-40 flex min-h-[56px] items-center justify-between border-b border-gray-200 bg-white px-4 md:px-5">
-      <div className="flex items-center gap-2.5">
+    <header className="sticky top-0 z-40 flex min-h-[56px] items-center justify-between border-b border-gray-200 bg-white px-3 md:px-5">
+      <div className="flex items-center gap-2">
         <button
           onClick={openDrawer}
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-lg md:hidden"
+          className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 text-lg active:bg-gray-100 md:hidden"
         >
-          <Menu size={18} />
+          <Menu size={20} />
         </button>
         <div>
           <h1 className="text-[15px] font-semibold">{title}</h1>
