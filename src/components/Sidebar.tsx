@@ -90,9 +90,12 @@ export function Sidebar() {
         <div className="border-b border-white/10 px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-500/30 text-xs font-semibold text-white">
-                {initials}
-              </div>
+              <svg width="36" height="36" viewBox="0 0 50 50" fill="none">
+                <circle cx="25" cy="25" r="23" fill="#2D6A4F" stroke="#52B788" strokeWidth="0.8"/>
+                <path d="M 11 37 L 11 14 L 25 26" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                <path d="M 25 26 L 39 14" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                <path d="M 25 26 L 39 14 L 46 7" stroke="#F4A261" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+              </svg>
               <div className="min-w-0">
                 <div className="truncate text-sm font-semibold text-white">{profileName}</div>
                 <div className="text-[10px] text-brand-300/70">Gestao para MEI</div>

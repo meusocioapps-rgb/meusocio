@@ -156,8 +156,13 @@ function LoginContent() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-900 text-xl font-bold text-white">
-            MS
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center">
+            <svg width="56" height="56" viewBox="0 0 50 50" fill="none">
+              <circle cx="25" cy="25" r="23" fill="#2D6A4F" stroke="#52B788" strokeWidth="0.8"/>
+              <path d="M 11 37 L 11 14 L 25 26" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+              <path d="M 25 26 L 39 14" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+              <path d="M 25 26 L 39 14 L 46 7" stroke="#F4A261" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+            </svg>
           </div>
           <h1 className="text-xl font-semibold text-gray-900">Meu Sócio</h1>
           <p className="mt-1 text-sm text-gray-400">Gestão para autônomos e MEI</p>

@@ -218,9 +218,14 @@ export function TopBar() {
 
         <Link
           href="/profile"
-          className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-900 text-[11px] font-semibold text-white"
+          className="flex h-8 w-8 items-center justify-center"
         >
-          MS
+          <svg width="32" height="32" viewBox="0 0 50 50" fill="none">
+            <circle cx="25" cy="25" r="23" fill="#2D6A4F" stroke="#52B788" strokeWidth="0.8"/>
+            <path d="M 11 37 L 11 14 L 25 26" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+            <path d="M 25 26 L 39 14" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+            <path d="M 25 26 L 39 14 L 46 7" stroke="#F4A261" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+          </svg>
         </Link>
       </div>
     </header>

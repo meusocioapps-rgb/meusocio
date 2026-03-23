@@ -4,8 +4,8 @@
   "description": "Gestao para autonomos e MEI",
   "start_url": "/dashboard",
   "display": "standalone",
-  "background_color": "#f7f7f5",
-  "theme_color": "#14532d",
+  "background_color": "#0D2B1E",
+  "theme_color": "#0D2B1E",
   "orientation": "portrait",
   "icons": [
     {
