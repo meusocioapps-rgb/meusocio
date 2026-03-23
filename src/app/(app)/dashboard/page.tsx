@@ -28,8 +28,6 @@ import {
   UserCheck,
   UserMinus,
   ArrowRight,
-  Clock,
-  Plus,
 } from 'lucide-react'
 import { AppointmentModal } from '@/components/AppointmentModal'
 import { PostAppointmentModal } from '@/components/PostAppointmentModal'
@@ -284,14 +282,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Quick actions */}
-      <div className="mb-4 grid grid-cols-4 gap-2">
-        <QuickAction href="/schedule/new" icon={<Plus size={16} />} label="Agendar" />
-        <QuickAction href="/finances/pending" icon={<Clock size={16} />} label="Pendências" />
-        <QuickAction href="/reports" icon={<TrendingUp size={16} />} label="Relatórios" />
-        <QuickAction href="/clients" icon={<Users size={16} />} label="Clientes" />
-      </div>
-
       {/* Grid: Resumo do dia + Financeiro */}
       <div className="grid gap-4 md:grid-cols-2">
         {/* Resumo do dia */}
@@ -427,26 +417,6 @@ export default function DashboardPage() {
         />
       )}
     </div>
-  )
-}
-
-function QuickAction({
-  href,
-  icon,
-  label,
-}: {
-  href: string
-  icon: React.ReactNode
-  label: string
-}) {
-  return (
-    <Link
-      href={href}
-      className="flex flex-col items-center gap-1.5 rounded-xl border border-gray-200 bg-white py-3 text-gray-600 hover:border-brand-300 hover:bg-brand-50 hover:text-brand-900"
-    >
-      {icon}
-      <span className="text-[10px] font-medium">{label}</span>
-    </Link>
   )
 }
 
