@@ -60,6 +60,32 @@ export default function DashboardPage() {
     isFreeReturn: boolean
   } | null>(null)
 
+  const openNextAsModal = () => {
+    if (!next) return
+    setSelectedAppt({
+      id: next.id,
+      client_id: next.client_id ?? '',
+      service_id: next.service_id ?? '',
+      scheduled_date: next.scheduled_date,
+      scheduled_time: next.scheduled_time,
+      estimated_value: next.estimated_value,
+      final_value: next.estimated_value,
+      status: 'scheduled',
+      is_free_return: false,
+      notes: null,
+      upsell_service: null,
+      upsell_value: 0,
+      next_return: null,
+      completed_at: null,
+      user_id: '',
+      created_at: '',
+      updated_at: '',
+      client_name: next.client_name,
+      client_phone: next.client_phone,
+      service_name: next.service_name,
+    })
+  }
+
   const recurrentCount = clients?.filter((c) => c.is_recurrent).length ?? 0
   const reactivateCount = clients?.filter((c) => c.needs_reactivation).length ?? 0
 
@@ -156,59 +182,19 @@ export default function DashboardPage() {
               {confirmMutation.isPending ? '...' : '✓ Confirmar'}
             </button>
             <button
-              onClick={() => {
-                setSelectedAppt({
-                  id: next.id,
-                  client_id: next.client_id ?? '',
-                  service_id: next.service_id ?? '',
-                  scheduled_date: next.scheduled_date,
-                  scheduled_time: next.scheduled_time,
-                  estimated_value: next.estimated_value,
-                  final_value: next.estimated_value,
-                  status: 'scheduled',
-                  is_free_return: false,
-                  notes: null,
-                  upsell_service: null,
-                  upsell_value: 0,
-                  next_return: null,
-                  completed_at: null,
-                  user_id: '',
-                  created_at: '',
-                  updated_at: '',
-                  client_name: next.client_name,
-                  client_phone: next.client_phone,
-                  service_name: next.service_name,
-                })
-              }}
+              onClick={() => openNextAsModal()}
+              className="rounded-lg border border-white/30 bg-green-500/30 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-green-500/50"
+            >
+              ✓ Realizado
+            </button>
+            <button
+              onClick={() => openNextAsModal()}
               className="rounded-lg border border-white/30 bg-white/20 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/30"
             >
               ↺ Remarcar
             </button>
             <button
-              onClick={() => {
-                setSelectedAppt({
-                  id: next.id,
-                  client_id: next.client_id ?? '',
-                  service_id: next.service_id ?? '',
-                  scheduled_date: next.scheduled_date,
-                  scheduled_time: next.scheduled_time,
-                  estimated_value: next.estimated_value,
-                  final_value: next.estimated_value,
-                  status: 'scheduled',
-                  is_free_return: false,
-                  notes: null,
-                  upsell_service: null,
-                  upsell_value: 0,
-                  next_return: null,
-                  completed_at: null,
-                  user_id: '',
-                  created_at: '',
-                  updated_at: '',
-                  client_name: next.client_name,
-                  client_phone: next.client_phone,
-                  service_name: next.service_name,
-                })
-              }}
+              onClick={() => openNextAsModal()}
               className="rounded-lg border border-white/30 bg-white/20 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/30"
             >
               ✗ Cancelou / Faltou

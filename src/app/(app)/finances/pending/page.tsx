@@ -8,7 +8,10 @@ import {
   useFinancialSummary,
   useCreateIncome,
   useCreateExpense,
+  useFixedExpenses,
+  useFinancialEntries,
 } from '@/hooks/use-finances'
+import { useAppointmentsByRange } from '@/hooks/use-appointments'
 import { formatCurrency, formatDate, cn } from '@/lib/utils'
 import { ArrowLeft, Check, Clock, AlertCircle, Plus, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { toast } from '@/components/Toast'
@@ -37,27 +40,128 @@ export default function PendingPage() {
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth())
   const [showModal, setShowModal] = useState<ModalType>(null)
 
-  const { data: entries, isLoading } = usePendingEntries()
+  const { start: monthStart, end: monthEnd } = getMonthRange(selectedYear, selectedMonth)
+  const monthKey = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}`
+
+  // Data hooks
+  const { data: appointments, isLoading: loadingAppointments } = useAppointmentsByRange(monthStart, monthEnd)
+  const { data: fixedExpenses, isLoading: loadingFixed } = useFixedExpenses()
+  const { data: pendingEntries } = usePendingEntries()
+  const { data: monthEntries } = useFinancialEntries(monthKey)
   const { data: summary } = useFinancialSummary()
   const updateStatus = useUpdateEntryStatus()
   const createIncome = useCreateIncome()
   const createExpense = useCreateExpense()
 
-  const { start: monthStart, end: monthEnd } = getMonthRange(selectedYear, selectedMonth)
+  const isLoading = loadingAppointments || loadingFixed
 
-  // Filter entries by selected month
-  const monthEntries = useMemo(() => {
-    if (!entries) return []
-    return entries.filter((e) => e.entry_date >= monthStart && e.entry_date <= monthEnd)
-  }, [entries, monthStart, monthEnd])
+  // 1. "A Receber" = scheduled/confirmed appointments for the selected month
+  const receivableAppointments = useMemo(() => {
+    if (!appointments) return []
+    return appointments.filter(
+      (a) => a.status === 'scheduled' || a.status === 'confirmed'
+    )
+  }, [appointments])
 
-  const receivables = monthEntries.filter((e) => e.type === 'income')
-  const payables = monthEntries.filter((e) => e.type === 'expense')
+  const totalReceivable = receivableAppointments.reduce(
+    (sum, a) => sum + (a.estimated_value || 0),
+    0
+  )
 
-  const totalReceivable = receivables.reduce((sum, e) => sum + e.amount, 0)
-  const totalPayable = payables.reduce((sum, e) => sum + e.amount, 0)
-  const prevFaturamento = (summary?.income_paid ?? 0) + totalReceivable
-  const saldoPrevisto = prevFaturamento - totalPayable - (summary?.expenses_total ?? 0)
+  // Income already paid this month
+  const incomePaid = useMemo(() => {
+    if (!monthEntries) return 0
+    return monthEntries
+      .filter((e) => e.type === 'income' && e.status === 'paid')
+      .reduce((sum, e) => sum + e.amount, 0)
+  }, [monthEntries])
+
+  // 2. "Prev. Faturamento" = paid income + A Receber
+  const prevFaturamento = incomePaid + totalReceivable
+
+  // 3. "A Pagar" = fixed expenses where due_day hasn't passed yet + pending expense entries this month
+  const today = now.getDate()
+  const isCurrentMonth =
+    selectedYear === now.getFullYear() && selectedMonth === now.getMonth()
+
+  const unpaidFixedExpenses = useMemo(() => {
+    if (!fixedExpenses) return []
+    // For current month: show fixed expenses where due_day >= today (not yet due)
+    // For future months: show all fixed expenses
+    // For past months: show none (already passed)
+    if (selectedYear < now.getFullYear() || (selectedYear === now.getFullYear() && selectedMonth < now.getMonth())) {
+      return [] // past month
+    }
+    if (isCurrentMonth) {
+      return fixedExpenses.filter((fe) => (fe.due_day ?? 0) >= today)
+    }
+    // future month - show all
+    return fixedExpenses
+  }, [fixedExpenses, selectedYear, selectedMonth, isCurrentMonth, today])
+
+  const pendingExpenseEntries = useMemo(() => {
+    if (!monthEntries) return []
+    return monthEntries.filter(
+      (e) => e.type === 'expense' && e.status === 'pending'
+    )
+  }, [monthEntries])
+
+  const totalFixedUnpaid = unpaidFixedExpenses.reduce(
+    (sum, fe) => sum + fe.amount,
+    0
+  )
+  const totalPendingExpenses = pendingExpenseEntries.reduce(
+    (sum, e) => sum + e.amount,
+    0
+  )
+  const totalPayable = totalFixedUnpaid + totalPendingExpenses
+
+  // Total expenses already paid this month
+  const expensesPaid = useMemo(() => {
+    if (!monthEntries) return 0
+    return monthEntries
+      .filter((e) => e.type === 'expense' && e.status === 'paid')
+      .reduce((sum, e) => sum + e.amount, 0)
+  }, [monthEntries])
+
+  // 4. "Saldo Previsto" = Prev. Faturamento - (paid expenses + A Pagar)
+  const saldoPrevisto = prevFaturamento - expensesPaid - totalPayable
+
+  // Combine payables list: unpaid fixed expenses + pending expense entries
+  const payablesList = useMemo(() => {
+    const items: Array<{
+      id: string
+      description: string
+      amount: number
+      dueDate: string
+      type: 'fixed' | 'entry'
+    }> = []
+
+    for (const fe of unpaidFixedExpenses) {
+      const dueDay = fe.due_day ?? 1
+      const dueDate = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-${String(dueDay).padStart(2, '0')}`
+      items.push({
+        id: fe.id,
+        description: fe.description,
+        amount: fe.amount,
+        dueDate,
+        type: 'fixed',
+      })
+    }
+
+    for (const e of pendingExpenseEntries) {
+      items.push({
+        id: e.id,
+        description: e.description,
+        amount: e.amount,
+        dueDate: e.entry_date,
+        type: 'entry',
+      })
+    }
+
+    items.sort((a, b) => a.dueDate.localeCompare(b.dueDate))
+    return items
+  }, [unpaidFixedExpenses, pendingExpenseEntries, selectedYear, selectedMonth])
 
   const handleMarkPaid = async (id: string) => {
     try {
@@ -69,10 +173,10 @@ export default function PendingPage() {
   }
 
   const isOverdue = (dateStr: string) => {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
+    const todayDate = new Date()
+    todayDate.setHours(0, 0, 0, 0)
     const date = new Date(dateStr + 'T12:00:00')
-    return date < today
+    return date < todayDate
   }
 
   const goToPrevMonth = () => {
@@ -152,7 +256,7 @@ export default function PendingPage() {
           <div className="mt-1 text-lg font-semibold text-green-600">
             {formatCurrency(totalReceivable)}
           </div>
-          <div className="text-[10px] text-gray-400">{receivables.length} pendente{receivables.length !== 1 ? 's' : ''}</div>
+          <div className="text-[10px] text-gray-400">{receivableAppointments.length} agendamento{receivableAppointments.length !== 1 ? 's' : ''}</div>
         </div>
         <div className="rounded-xl border border-gray-200 bg-white p-3">
           <div className="flex items-center gap-1.5 text-[10px] font-medium text-gray-400">
@@ -172,7 +276,7 @@ export default function PendingPage() {
           <div className="mt-1 text-lg font-semibold text-red-600">
             {formatCurrency(totalPayable)}
           </div>
-          <div className="text-[10px] text-gray-400">{payables.length} pendente{payables.length !== 1 ? 's' : ''}</div>
+          <div className="text-[10px] text-gray-400">{payablesList.length} pendente{payablesList.length !== 1 ? 's' : ''}</div>
         </div>
         <div className="rounded-xl border border-gray-200 bg-white p-3">
           <div className="flex items-center gap-1.5 text-[10px] font-medium text-gray-400">
@@ -202,17 +306,17 @@ export default function PendingPage() {
           </div>
           {isLoading ? (
             <div className="py-8 text-center text-sm text-gray-400">Carregando...</div>
-          ) : receivables.length === 0 ? (
+          ) : receivableAppointments.length === 0 ? (
             <div className="py-10 text-center">
               <p className="text-[13px] text-gray-400">Nenhum valor a receber</p>
             </div>
           ) : (
             <div className="max-h-[400px] overflow-y-auto">
-              {receivables.map((entry) => {
-                const overdue = isOverdue(entry.entry_date)
+              {receivableAppointments.map((appt) => {
+                const overdue = isOverdue(appt.scheduled_date)
                 return (
                   <div
-                    key={entry.id}
+                    key={appt.id}
                     className="flex items-center gap-3 border-b border-gray-50 px-4 py-3 last:border-0"
                   >
                     <div
@@ -229,7 +333,7 @@ export default function PendingPage() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
-                        <span className="truncate text-[12px] font-medium">{entry.client_name || entry.description}</span>
+                        <span className="truncate text-[12px] font-medium">{appt.client_name}</span>
                         {overdue && (
                           <span className="flex-shrink-0 rounded-full bg-red-100 px-1.5 py-0.5 text-[8px] font-semibold text-red-600">
                             Vencido
@@ -237,25 +341,16 @@ export default function PendingPage() {
                         )}
                       </div>
                       <div className="text-[10px] text-gray-400">
-                        {entry.description}
-                        {entry.service_name && ` · ${entry.service_name}`}
+                        {appt.service_name}
                       </div>
                       <div className="text-[10px] text-gray-400">
-                        Vence: {formatDate(entry.entry_date)}
+                        {formatDate(appt.scheduled_date)} {appt.scheduled_time ? `as ${appt.scheduled_time.slice(0, 5)}` : ''}
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <span className="text-[13px] font-semibold text-green-600">
-                        {formatCurrency(entry.amount)}
+                        {formatCurrency(appt.estimated_value)}
                       </span>
-                      <button
-                        onClick={() => handleMarkPaid(entry.id)}
-                        disabled={updateStatus.isPending}
-                        className="flex h-6 w-6 items-center justify-center rounded-md border border-gray-200 text-gray-400 hover:border-green-500 hover:bg-green-50 hover:text-green-600 disabled:opacity-50"
-                        title="Marcar como pago"
-                      >
-                        <Check size={12} />
-                      </button>
                     </div>
                   </div>
                 )
@@ -278,17 +373,17 @@ export default function PendingPage() {
           </div>
           {isLoading ? (
             <div className="py-8 text-center text-sm text-gray-400">Carregando...</div>
-          ) : payables.length === 0 ? (
+          ) : payablesList.length === 0 ? (
             <div className="py-10 text-center">
               <p className="text-[13px] text-gray-400">Nenhum valor a pagar</p>
             </div>
           ) : (
             <div className="max-h-[400px] overflow-y-auto">
-              {payables.map((entry) => {
-                const overdue = isOverdue(entry.entry_date)
+              {payablesList.map((item) => {
+                const overdue = isOverdue(item.dueDate)
                 return (
                   <div
-                    key={entry.id}
+                    key={`${item.type}-${item.id}`}
                     className="flex items-center gap-3 border-b border-gray-50 px-4 py-3 last:border-0"
                   >
                     <div
@@ -305,7 +400,12 @@ export default function PendingPage() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
-                        <span className="truncate text-[12px] font-medium">{entry.description}</span>
+                        <span className="truncate text-[12px] font-medium">{item.description}</span>
+                        {item.type === 'fixed' && (
+                          <span className="flex-shrink-0 rounded-full bg-gray-100 px-1.5 py-0.5 text-[8px] font-semibold text-gray-500">
+                            Fixo
+                          </span>
+                        )}
                         {overdue && (
                           <span className="flex-shrink-0 rounded-full bg-red-100 px-1.5 py-0.5 text-[8px] font-semibold text-red-600">
                             Vencido
@@ -313,21 +413,23 @@ export default function PendingPage() {
                         )}
                       </div>
                       <div className="text-[10px] text-gray-400">
-                        Vence: {formatDate(entry.entry_date)}
+                        Vence: {formatDate(item.dueDate)}
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <span className="text-[13px] font-semibold text-red-600">
-                        {formatCurrency(entry.amount)}
+                        {formatCurrency(item.amount)}
                       </span>
-                      <button
-                        onClick={() => handleMarkPaid(entry.id)}
-                        disabled={updateStatus.isPending}
-                        className="flex h-6 w-6 items-center justify-center rounded-md border border-gray-200 text-gray-400 hover:border-green-500 hover:bg-green-50 hover:text-green-600 disabled:opacity-50"
-                        title="Marcar como pago"
-                      >
-                        <Check size={12} />
-                      </button>
+                      {item.type === 'entry' && (
+                        <button
+                          onClick={() => handleMarkPaid(item.id)}
+                          disabled={updateStatus.isPending}
+                          className="flex h-6 w-6 items-center justify-center rounded-md border border-gray-200 text-gray-400 hover:border-green-500 hover:bg-green-50 hover:text-green-600 disabled:opacity-50"
+                          title="Marcar como pago"
+                        >
+                          <Check size={12} />
+                        </button>
+                      )}
                     </div>
                   </div>
                 )
