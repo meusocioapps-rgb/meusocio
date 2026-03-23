@@ -172,13 +172,14 @@ function NewClientModal({
 
   const handleSubmit = async () => {
     if (!form.name.trim()) return
-    const data: Record<string, string> = { name: form.name.trim() }
-    if (form.phone) data.phone = form.phone
-    if (form.email) data.email = form.email
-    if (form.instagram) data.instagram = form.instagram
-    if (form.birth_date) data.birth_date = form.birth_date
-    if (form.source) data.source = form.source
-    await onSave(data)
+    await onSave({
+      name: form.name.trim(),
+      ...(form.phone && { phone: form.phone }),
+      ...(form.email && { email: form.email }),
+      ...(form.instagram && { instagram: form.instagram }),
+      ...(form.birth_date && { birth_date: form.birth_date }),
+      ...(form.source && { source: form.source }),
+    })
   }
 
   return (
