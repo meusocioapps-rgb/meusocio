@@ -106,6 +106,57 @@ export function useUpdateClient() {
   })
 }
 
+export function useClientHistory(clientId: string) {
+  return useQuery({
+    queryKey: ['client', clientId, 'history'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('client_history')
+        .select('*')
+        .eq('client_id', clientId)
+        .order('event_date', { ascending: false })
+        .limit(50)
+      if (error) throw error
+      return data as Array<{
+        id: string
+        event_type: string
+        event_date: string
+        service_name: string | null
+        value: number | null
+        notes: string | null
+        created_at: string
+      }>
+    },
+    enabled: !!clientId,
+  })
+}
+
+export function useClientAppointments(clientId: string) {
+  return useQuery({
+    queryKey: ['client', clientId, 'appointments'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('appointments')
+        .select('*')
+        .eq('client_id', clientId)
+        .order('scheduled_date', { ascending: false })
+        .limit(20)
+      if (error) throw error
+      return data as Array<{
+        id: string
+        service_name: string
+        scheduled_date: string
+        scheduled_time: string
+        estimated_value: number
+        final_value: number | null
+        status: string
+        is_free_return: boolean
+      }>
+    },
+    enabled: !!clientId,
+  })
+}
+
 export function useDeleteClient() {
   const queryClient = useQueryClient()
 

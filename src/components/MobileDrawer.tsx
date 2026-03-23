@@ -11,7 +11,12 @@ const drawerLinks = [
   { href: '/schedule/new', label: 'Novo Atendimento', emoji: '➕' },
   { href: '/finances', label: 'Receitas', emoji: '💵' },
   { href: '/finances/expenses', label: 'Despesas', emoji: '💸' },
-  { href: '/settings', label: 'Configuracoes', emoji: '⚙️' },
+  { href: '/finances/pending', label: 'A Receber/Pagar', emoji: '🕐' },
+  { href: '/reports', label: 'Relatórios', emoji: '📊' },
+  { href: '/export', label: 'Exportar Dados', emoji: '📤' },
+  { href: '/settings', label: 'Configurações', emoji: '⚙️' },
+  { href: '/profile', label: 'Meu Perfil', emoji: '👤' },
+  { href: '/support', label: 'Ajuda', emoji: '💬' },
 ]
 
 export function MobileDrawer() {

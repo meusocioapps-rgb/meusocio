@@ -98,6 +98,43 @@ export function useCreateExpense() {
   })
 }
 
+export function usePendingEntries() {
+  return useQuery({
+    queryKey: ['finances', 'pending'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('financial_entries')
+        .select('*')
+        .in('status', ['pending', 'partial'])
+        .order('entry_date', { ascending: true })
+      if (error) throw error
+      return data as FinancialEntry[]
+    },
+    staleTime: 30_000,
+  })
+}
+
+export function useUpdateEntryStatus() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (params: { id: string; status: 'paid' | 'pending' | 'partial' }) => {
+      const { data, error } = await supabase
+        .from('financial_entries')
+        .update({ status: params.status })
+        .eq('id', params.id)
+        .select()
+        .single()
+      if (error) throw error
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['finances'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+    },
+  })
+}
+
 export function useFinancialSummary() {
   return useQuery({
     queryKey: ['finances', 'summary'],

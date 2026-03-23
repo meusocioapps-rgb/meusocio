@@ -1,11 +1,14 @@
 'use client'
 
+import Link from 'next/link'
 import {
   useDashboardStats,
   useNextAppointment,
   useNotifications,
 } from '@/hooks/use-dashboard'
 import { useTodayAppointments, useConfirmAppointment } from '@/hooks/use-appointments'
+import { useClients } from '@/hooks/use-clients'
+import { useFinancialSummary } from '@/hooks/use-finances'
 import {
   formatCurrency,
   formatDate,
@@ -14,14 +17,30 @@ import {
   statusColor,
   cn,
 } from '@/lib/utils'
-import { DollarSign, Users, Calendar, TrendingUp } from 'lucide-react'
+import {
+  DollarSign,
+  Users,
+  Calendar,
+  TrendingUp,
+  Target,
+  UserCheck,
+  UserMinus,
+  ArrowRight,
+  Clock,
+  Plus,
+} from 'lucide-react'
 
 export default function DashboardPage() {
   const { data: stats, isLoading: loadingStats } = useDashboardStats()
   const { data: next } = useNextAppointment()
   const { data: todayAppts } = useTodayAppointments()
   const { data: notifications } = useNotifications()
+  const { data: summary } = useFinancialSummary()
+  const { data: clients } = useClients()
   const confirmMutation = useConfirmAppointment()
+
+  const recurrentCount = clients?.filter((c) => c.is_recurrent).length ?? 0
+  const reactivateCount = clients?.filter((c) => c.needs_reactivation).length ?? 0
 
   if (loadingStats) {
     return (
@@ -31,41 +50,71 @@ export default function DashboardPage() {
     )
   }
 
+  // Monthly goal progress
+  const revenue = stats?.revenue ?? 0
+  const monthlyGoal = 5000 // TODO: from settings
+  const goalPct = monthlyGoal > 0 ? Math.min((revenue / monthlyGoal) * 100, 100) : 0
+
   return (
     <div>
-      {/* Alertas / Notificacoes */}
+      {/* Alertas / Notificações */}
       {notifications && notifications.length > 0 && (
         <div className="mb-4 space-y-2">
           {notifications.slice(0, 3).map((n, i) => (
             <div
               key={i}
-              className="flex items-center gap-3 rounded-xl border border-orange-200 bg-orange-50 px-4 py-3"
+              className={cn(
+                'flex items-center gap-3 rounded-xl border px-4 py-3',
+                n.type === 'birthday'
+                  ? 'border-pink-200 bg-pink-50'
+                  : n.type === 'inactive_client'
+                    ? 'border-red-200 bg-red-50'
+                    : 'border-orange-200 bg-orange-50'
+              )}
             >
               <span className="text-lg">
-                {n.type === 'birthday' ? '🎂' : '⚠️'}
+                {n.type === 'birthday' ? '🎂' : n.type === 'inactive_client' ? '⚠️' : '💰'}
               </span>
               <div className="flex-1">
-                <div className="text-xs font-semibold text-orange-800">
+                <div className={cn(
+                  'text-xs font-semibold',
+                  n.type === 'birthday' ? 'text-pink-800' : n.type === 'inactive_client' ? 'text-red-800' : 'text-orange-800'
+                )}>
                   {n.type === 'birthday'
-                    ? `Aniversario de ${n.client_name}`
-                    : `${n.description} vence em ${n.days_until} dias`}
+                    ? `Aniversário de ${n.client_name}`
+                    : n.type === 'inactive_client'
+                      ? `${n.client_name} está inativo`
+                      : `${n.description} vence em ${n.days_until} dias`}
                 </div>
-                <div className="text-[10px] text-orange-600">
+                <div className={cn(
+                  'text-[10px]',
+                  n.type === 'birthday' ? 'text-pink-600' : n.type === 'inactive_client' ? 'text-red-600' : 'text-orange-600'
+                )}>
                   {n.days_until === 0
                     ? 'Hoje!'
-                    : `Em ${n.days_until} dias`}
+                    : n.days_until > 0
+                      ? `Em ${n.days_until} dias`
+                      : `Há ${Math.abs(n.days_until)} dias`}
                 </div>
               </div>
+              {n.client_id && (
+                <Link
+                  href={`/clients/${n.client_id}`}
+                  className="text-[10px] font-medium text-brand-900"
+                >
+                  Ver →
+                </Link>
+              )}
             </div>
           ))}
         </div>
       )}
 
-      {/* Proximo atendimento */}
+      {/* Próximo atendimento */}
       {next && next.id && (
         <div className="mb-4 rounded-xl bg-brand-900 p-4 text-white">
           <span className="mb-2 inline-block rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-semibold">
-            ⏰ Proximo atendimento — {formatDate(next.scheduled_date)} as{' '}
+            ⏰ Próximo atendimento — {formatDate(next.scheduled_date)} às{' '}
             {formatTime(next.scheduled_time)}
           </span>
           <div className="text-base font-semibold">{next.client_name}</div>
@@ -79,9 +128,15 @@ export default function DashboardPage() {
             >
               ✓ Confirmar
             </button>
-            <button className="rounded-lg border border-white/30 bg-white/20 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/30">
-              ↺ Remarcar
-            </button>
+            {next.client_phone && (
+              <a
+                href={`https://wa.me/55${next.client_phone.replace(/\D/g, '')}`}
+                target="_blank"
+                className="rounded-lg border border-white/30 bg-white/20 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/30"
+              >
+                💬 WhatsApp
+              </a>
+            )}
           </div>
         </div>
       )}
@@ -109,12 +164,45 @@ export default function DashboardPage() {
           valueColor="text-amber-600"
         />
         <KpiCard
-          label="Lucro do mes"
+          label="Lucro do mês"
           value={formatCurrency(stats?.profit ?? 0)}
           icon={<TrendingUp size={14} />}
           iconBg="bg-green-100"
           valueColor={(stats?.profit ?? 0) >= 0 ? 'text-brand-900' : 'text-red-600'}
         />
+      </div>
+
+      {/* Meta mensal */}
+      <div className="mb-4 rounded-xl border border-gray-200 bg-white p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Target size={14} className="text-brand-900" />
+            <span className="text-[12px] font-semibold">Meta mensal</span>
+          </div>
+          <span className="text-[11px] text-gray-400">
+            {formatCurrency(revenue)} / {formatCurrency(monthlyGoal)}
+          </span>
+        </div>
+        <div className="mt-2 h-2 overflow-hidden rounded-full bg-gray-100">
+          <div
+            className={cn(
+              'h-full rounded-full transition-all',
+              goalPct >= 100 ? 'bg-brand-500' : 'bg-brand-900'
+            )}
+            style={{ width: `${goalPct}%` }}
+          />
+        </div>
+        <div className="mt-1 text-right text-[10px] text-gray-400">
+          {goalPct.toFixed(0)}% atingido
+        </div>
+      </div>
+
+      {/* Quick actions */}
+      <div className="mb-4 grid grid-cols-4 gap-2">
+        <QuickAction href="/schedule/new" icon={<Plus size={16} />} label="Agendar" />
+        <QuickAction href="/finances/pending" icon={<Clock size={16} />} label="Pendências" />
+        <QuickAction href="/reports" icon={<TrendingUp size={16} />} label="Relatórios" />
+        <QuickAction href="/clients" icon={<Users size={16} />} label="Clientes" />
       </div>
 
       {/* Grid: Resumo do dia + Financeiro */}
@@ -123,9 +211,9 @@ export default function DashboardPage() {
         <div className="rounded-xl border border-gray-200 bg-white p-4">
           <div className="mb-3 flex items-center justify-between">
             <span className="text-[13px] font-semibold">☀️ Resumo do dia</span>
-            <a href="/schedule" className="text-[11px] font-medium text-brand-900">
+            <Link href="/schedule" className="text-[11px] font-medium text-brand-900">
               Ver agenda →
-            </a>
+            </Link>
           </div>
           {todayAppts && todayAppts.length > 0 ? (
             <div>
@@ -164,9 +252,9 @@ export default function DashboardPage() {
         <div className="rounded-xl border border-gray-200 bg-white p-4">
           <div className="mb-3 flex items-center justify-between">
             <span className="text-[13px] font-semibold">💰 Financeiro</span>
-            <a href="/finances" className="text-[11px] font-medium text-brand-900">
+            <Link href="/finances" className="text-[11px] font-medium text-brand-900">
               Detalhar →
-            </a>
+            </Link>
           </div>
           <FinBar
             label="Faturamento bruto"
@@ -181,14 +269,72 @@ export default function DashboardPage() {
             color="bg-red-500"
           />
           <FinBar
-            label="Lucro liquido"
+            label="Lucro líquido"
             value={stats?.profit ?? 0}
             max={stats?.revenue ?? 1}
             color="bg-brand-500"
           />
+          {summary && (
+            <div className="mt-2 border-t border-gray-100 pt-2">
+              <div className="flex items-center justify-between text-[10px]">
+                <span className="text-gray-400">Pendente</span>
+                <span className="font-semibold text-amber-600">
+                  {formatCurrency(summary.income_pending)}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Painel de clientes */}
+      <div className="mt-4 grid gap-3 md:grid-cols-2">
+        <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-100">
+            <UserCheck size={18} className="text-green-600" />
+          </div>
+          <div className="flex-1">
+            <div className="text-[13px] font-semibold">{recurrentCount}</div>
+            <div className="text-[10px] text-gray-400">Clientes recorrentes</div>
+          </div>
+          <Link href="/clients" className="text-gray-300">
+            <ArrowRight size={16} />
+          </Link>
+        </div>
+        <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-100">
+            <UserMinus size={18} className="text-red-500" />
+          </div>
+          <div className="flex-1">
+            <div className="text-[13px] font-semibold">{reactivateCount}</div>
+            <div className="text-[10px] text-gray-400">Para reativar</div>
+          </div>
+          <Link href="/clients" className="text-gray-300">
+            <ArrowRight size={16} />
+          </Link>
         </div>
       </div>
     </div>
+  )
+}
+
+function QuickAction({
+  href,
+  icon,
+  label,
+}: {
+  href: string
+  icon: React.ReactNode
+  label: string
+}) {
+  return (
+    <Link
+      href={href}
+      className="flex flex-col items-center gap-1.5 rounded-xl border border-gray-200 bg-white py-3 text-gray-600 hover:border-brand-300 hover:bg-brand-50 hover:text-brand-900"
+    >
+      {icon}
+      <span className="text-[10px] font-medium">{label}</span>
+    </Link>
   )
 }
 

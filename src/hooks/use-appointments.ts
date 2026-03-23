@@ -27,6 +27,25 @@ export function useTodayAppointments() {
   return useAppointmentsByDate(getToday())
 }
 
+export function useAppointmentsByRange(startDate: string, endDate: string) {
+  return useQuery({
+    queryKey: ['appointments', 'range', startDate, endDate],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('appointments_with_client')
+        .select('*')
+        .gte('scheduled_date', startDate)
+        .lte('scheduled_date', endDate)
+        .order('scheduled_date')
+        .order('scheduled_time')
+      if (error) throw error
+      return data as AppointmentWithClient[]
+    },
+    staleTime: 30_000,
+    enabled: !!startDate && !!endDate,
+  })
+}
+
 export function useCreateAppointment() {
   const queryClient = useQueryClient()
 

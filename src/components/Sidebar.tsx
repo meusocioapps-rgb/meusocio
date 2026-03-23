@@ -33,12 +33,17 @@ const sections = [
     items: [
       { href: '/finances', label: 'Receitas', icon: DollarSign },
       { href: '/finances/expenses', label: 'Despesas', icon: TrendingDown },
+      { href: '/finances/pending', label: 'A Receber/Pagar', icon: CreditCard },
+      { href: '/reports', label: 'Relatórios', icon: BarChart3 },
+      { href: '/export', label: 'Exportar Dados', icon: FileText },
     ],
   },
   {
     title: 'Conta',
     items: [
-      { href: '/settings', label: 'Configuracoes', icon: Settings },
+      { href: '/settings', label: 'Configurações', icon: Settings },
+      { href: '/profile', label: 'Meu Perfil', icon: User },
+      { href: '/support', label: 'Ajuda', icon: MessageCircle },
     ],
   },
 ]

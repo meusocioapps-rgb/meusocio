@@ -2,18 +2,19 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useClients } from '@/hooks/use-clients'
+import { useClients, useCreateClient } from '@/hooks/use-clients'
 import { useServices } from '@/hooks/use-services'
 import { useCreateAppointment } from '@/hooks/use-appointments'
 import { formatCurrency, getToday, getInitials } from '@/lib/utils'
 import { toast } from '@/components/Toast'
-import { Search } from 'lucide-react'
+import { Search, Plus, X, UserPlus } from 'lucide-react'
 
 export default function NewAppointmentPage() {
   const router = useRouter()
   const { data: clients } = useClients()
   const { data: services } = useServices()
   const createAppointment = useCreateAppointment()
+  const createClient = useCreateClient()
 
   const [clientId, setClientId] = useState('')
   const [serviceId, setServiceId] = useState('')
@@ -23,6 +24,12 @@ export default function NewAppointmentPage() {
   const [notes, setNotes] = useState('')
   const [clientSearch, setClientSearch] = useState('')
   const [showResults, setShowResults] = useState(false)
+
+  // Inline new client form
+  const [showNewClient, setShowNewClient] = useState(false)
+  const [newClientName, setNewClientName] = useState('')
+  const [newClientPhone, setNewClientPhone] = useState('')
+  const [newClientSource, setNewClientSource] = useState('Indicação')
 
   const selectedClient = clients?.find((c) => c.id === clientId)
   const selectedService = services?.find((s) => s.id === serviceId)
@@ -83,34 +90,116 @@ export default function NewAppointmentPage() {
             />
           </div>
           {showResults && clientSearch && (
-            <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-[200px] overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
-              {filteredClients.length === 0 ? (
-                <div className="px-3 py-4 text-center text-xs text-gray-400">
-                  Nenhum cliente encontrado
+            <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-[250px] overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+              {filteredClients.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => {
+                    setClientId(c.id)
+                    setClientSearch(c.name)
+                    setShowResults(false)
+                    setShowNewClient(false)
+                  }}
+                  className="flex w-full items-center gap-2 border-b border-gray-50 px-3 py-2.5 text-left text-xs hover:bg-brand-50 last:border-0"
+                >
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 text-[9px] font-semibold text-brand-900">
+                    {getInitials(c.name)}
+                  </div>
+                  <span className="font-medium">{c.name}</span>
+                  <span className="text-gray-400">{c.code}</span>
+                </button>
+              ))}
+              {/* Botão criar novo cliente */}
+              <button
+                onClick={() => {
+                  setShowResults(false)
+                  setShowNewClient(true)
+                  setNewClientName(clientSearch)
+                }}
+                className="flex w-full items-center gap-2 border-t border-gray-100 px-3 py-3 text-left text-xs font-medium text-brand-900 hover:bg-brand-50"
+              >
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100">
+                  <UserPlus size={12} className="text-brand-900" />
                 </div>
-              ) : (
-                filteredClients.map((c) => (
-                  <button
-                    key={c.id}
-                    onClick={() => {
-                      setClientId(c.id)
-                      setClientSearch(c.name)
-                      setShowResults(false)
-                    }}
-                    className="flex w-full items-center gap-2 border-b border-gray-50 px-3 py-2.5 text-left text-xs hover:bg-brand-50 last:border-0"
-                  >
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 text-[9px] font-semibold text-brand-900">
-                      {getInitials(c.name)}
-                    </div>
-                    <span className="font-medium">{c.name}</span>
-                    <span className="text-gray-400">{c.code}</span>
-                  </button>
-                ))
-              )}
+                Criar &quot;{clientSearch}&quot; como novo cliente
+              </button>
             </div>
           )}
         </div>
-        {selectedClient && (
+
+        {/* Inline new client form */}
+        {showNewClient && (
+          <div className="mt-3 rounded-lg border border-brand-200 bg-brand-50 p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-[11px] font-semibold text-brand-900">
+                <UserPlus size={12} className="mb-0.5 mr-1 inline" />
+                Novo cliente
+              </span>
+              <button
+                onClick={() => setShowNewClient(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X size={14} />
+              </button>
+            </div>
+            <div className="space-y-2">
+              <input
+                type="text"
+                placeholder="Nome *"
+                value={newClientName}
+                onChange={(e) => setNewClientName(e.target.value)}
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-[13px] outline-none focus:border-brand-900"
+              />
+              <input
+                type="text"
+                placeholder="Telefone (opcional)"
+                value={newClientPhone}
+                onChange={(e) => setNewClientPhone(e.target.value)}
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-[13px] outline-none focus:border-brand-900"
+              />
+              <select
+                value={newClientSource}
+                onChange={(e) => setNewClientSource(e.target.value)}
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-[13px] outline-none"
+              >
+                <option value="Indicação">Indicação</option>
+                <option value="Instagram">Instagram</option>
+                <option value="Google">Google</option>
+                <option value="Passando na frente">Passando na frente</option>
+                <option value="Outro">Outro</option>
+              </select>
+              <button
+                onClick={async () => {
+                  if (!newClientName.trim()) {
+                    toast('Nome do cliente é obrigatório')
+                    return
+                  }
+                  try {
+                    const result = await createClient.mutateAsync({
+                      name: newClientName.trim(),
+                      phone: newClientPhone || undefined,
+                      source: newClientSource,
+                    })
+                    setClientId(result.id)
+                    setClientSearch(newClientName.trim())
+                    setShowNewClient(false)
+                    setNewClientName('')
+                    setNewClientPhone('')
+                    toast('Cliente criado!')
+                  } catch {
+                    toast('Erro ao criar cliente')
+                  }
+                }}
+                disabled={createClient.isPending}
+                className="w-full rounded-lg bg-brand-900 py-2 text-xs font-medium text-white disabled:opacity-50"
+              >
+                {createClient.isPending ? 'Criando...' : 'Criar e selecionar'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {selectedClient && !showNewClient && (
           <div className="mt-2 rounded-lg bg-brand-50 px-3 py-2 text-xs text-brand-900">
             ✓ {selectedClient.name} ({selectedClient.code})
           </div>
