@@ -19,6 +19,7 @@ const titles: Record<string, string> = {
   '/reports': 'Relatórios',
   '/export': 'Exportar Dados',
   '/settings': 'Configurações',
+  '/overview': 'Overview',
   '/profile': 'Meu Perfil',
   '/support': 'Ajuda',
 }

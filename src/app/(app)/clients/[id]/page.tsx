@@ -1,7 +1,7 @@
 'use client'
 
-import { use } from 'react'
 import Link from 'next/link'
+import { useParams } from 'next/navigation'
 import {
   useClient,
   useClientHistory,
@@ -20,12 +20,8 @@ import {
 import { ArrowLeft, Phone, Mail, Instagram, ExternalLink } from 'lucide-react'
 import { toast } from '@/components/Toast'
 
-export default function ClientDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
-  const { id } = use(params)
+export default function ClientDetailPage() {
+  const { id } = useParams<{ id: string }>()
   const { data: client, isLoading } = useClient(id)
   const { data: history } = useClientHistory(id)
   const { data: appointments } = useClientAppointments(id)

@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useProfile, useUpdateProfile, useSubscription, useLogout } from '@/hooks/use-profile'
-import { formatCurrency } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/client'
+import { formatCurrency, cn } from '@/lib/utils'
 import { toast } from '@/components/Toast'
 import {
   User,
@@ -17,15 +18,45 @@ import {
   Save,
   Crown,
   Calendar,
+  Download,
+  Users,
+  DollarSign,
+  Loader2,
 } from 'lucide-react'
 
+const supabase = createClient()
+
+type ExportType = 'clients' | 'appointments' | 'finances'
+
+function escapeCsv(val: unknown): string {
+  if (val === null || val === undefined) return ''
+  const str = String(val)
+  if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+    return `"${str.replace(/"/g, '""')}"`
+  }
+  return str
+}
+
+function downloadCsv(filename: string, headers: string[], rows: string[][]) {
+  const bom = '\uFEFF'
+  const csv = bom + [headers.join(';'), ...rows.map((r) => r.join(';'))].join('\n')
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 export default function ProfilePage() {
-  const { data: profile, isLoading } = useProfile()
+  const { data: profile, isLoading, error: profileError } = useProfile()
   const { data: subscription } = useSubscription()
   const updateProfile = useUpdateProfile()
   const logout = useLogout()
 
   const [editing, setEditing] = useState(false)
+  const [exportLoading, setExportLoading] = useState<ExportType | null>(null)
   const [form, setForm] = useState({
     full_name: '',
     business_name: '',
@@ -82,16 +113,113 @@ export default function ProfilePage() {
     }
   }
 
+  const handleExport = async (type: ExportType) => {
+    setExportLoading(type)
+    try {
+      const today = new Date().toISOString().slice(0, 10)
+
+      if (type === 'clients') {
+        const { data, error } = await supabase
+          .from('clients_with_status')
+          .select('*')
+          .order('name')
+        if (error) throw error
+
+        const headers = [
+          'Código', 'Nome', 'Telefone', 'Email', 'Instagram',
+          'Nascimento', 'Fonte', 'Total Visitas', 'Total Gasto',
+          'Última Visita', 'Recorrente', 'Reativar', 'Status', 'Observações',
+        ]
+        const rows = (data ?? []).map((c) => [
+          escapeCsv(c.code), escapeCsv(c.name), escapeCsv(c.phone),
+          escapeCsv(c.email), escapeCsv(c.instagram), escapeCsv(c.birth_date),
+          escapeCsv(c.source), escapeCsv(c.total_visits), escapeCsv(c.total_spent),
+          escapeCsv(c.last_visit), c.is_recurrent ? 'Sim' : 'Não',
+          c.needs_reactivation ? 'Sim' : 'Não', escapeCsv(c.activity_status),
+          escapeCsv(c.notes),
+        ])
+        downloadCsv(`clientes_${today}.csv`, headers, rows)
+        toast(`${rows.length} clientes exportados!`)
+      }
+
+      if (type === 'appointments') {
+        const { data, error } = await supabase
+          .from('appointments_with_client')
+          .select('*')
+          .order('scheduled_date', { ascending: false })
+          .limit(5000)
+        if (error) throw error
+
+        const headers = [
+          'Data', 'Horário', 'Cliente', 'Telefone', 'Serviço',
+          'Valor Estimado', 'Valor Final', 'Status', 'Retorno Gratuito',
+          'Upsell', 'Valor Upsell', 'Observações',
+        ]
+        const statusMap: Record<string, string> = {
+          scheduled: 'Agendado', confirmed: 'Confirmado', completed: 'Realizado',
+          rescheduled: 'Remarcado', no_show: 'Faltou', cancelled: 'Cancelado',
+        }
+        const rows = (data ?? []).map((a) => [
+          escapeCsv(a.scheduled_date), escapeCsv(a.scheduled_time?.slice(0, 5)),
+          escapeCsv(a.client_name), escapeCsv(a.client_phone), escapeCsv(a.service_name),
+          escapeCsv(a.estimated_value), escapeCsv(a.final_value),
+          escapeCsv(statusMap[a.status] || a.status), a.is_free_return ? 'Sim' : 'Não',
+          escapeCsv(a.upsell_service), escapeCsv(a.upsell_value), escapeCsv(a.notes),
+        ])
+        downloadCsv(`atendimentos_${today}.csv`, headers, rows)
+        toast(`${rows.length} atendimentos exportados!`)
+      }
+
+      if (type === 'finances') {
+        const { data, error } = await supabase
+          .from('financial_entries')
+          .select('*')
+          .order('entry_date', { ascending: false })
+          .limit(5000)
+        if (error) throw error
+
+        const headers = [
+          'Data', 'Tipo', 'Descrição', 'Valor', 'Cliente',
+          'Serviço', 'Status', 'Categoria',
+        ]
+        const rows = (data ?? []).map((e) => [
+          escapeCsv(e.entry_date), e.type === 'income' ? 'Receita' : 'Despesa',
+          escapeCsv(e.description), escapeCsv(e.amount), escapeCsv(e.client_name),
+          escapeCsv(e.service_name),
+          e.status === 'paid' ? 'Pago' : e.status === 'pending' ? 'Pendente' : 'Parcial',
+          escapeCsv(e.expense_category),
+        ])
+        downloadCsv(`financeiro_${today}.csv`, headers, rows)
+        toast(`${rows.length} registros exportados!`)
+      }
+    } catch {
+      toast('Erro ao exportar dados')
+    } finally {
+      setExportLoading(null)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="py-20 text-center text-sm text-gray-400">Carregando...</div>
     )
   }
 
-  if (!profile) {
+  if (profileError || !profile) {
     return (
-      <div className="py-20 text-center text-sm text-gray-400">
-        Perfil não encontrado
+      <div className="mx-auto max-w-2xl py-10">
+        <div className="rounded-xl border border-gray-200 bg-white p-6 text-center">
+          <p className="text-sm text-gray-500">
+            {profileError ? 'Erro ao carregar perfil. Tente novamente.' : 'Perfil não encontrado'}
+          </p>
+          <button
+            onClick={handleLogout}
+            className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-white py-3 text-[13px] font-medium text-red-600 hover:bg-red-50"
+          >
+            <LogOut size={15} />
+            Sair da conta
+          </button>
+        </div>
       </div>
     )
   }
@@ -118,6 +246,27 @@ export default function ProfilePage() {
       year: 'numeric',
     })
   }
+
+  const exportOptions = [
+    {
+      type: 'clients' as ExportType,
+      label: 'Clientes',
+      icon: <Users size={15} />,
+      color: 'bg-blue-600',
+    },
+    {
+      type: 'appointments' as ExportType,
+      label: 'Atendimentos',
+      icon: <Calendar size={15} />,
+      color: 'bg-brand-900',
+    },
+    {
+      type: 'finances' as ExportType,
+      label: 'Financeiro',
+      icon: <DollarSign size={15} />,
+      color: 'bg-green-600',
+    },
+  ]
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -297,6 +446,49 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
+
+      {/* Exportar Dados */}
+      <div className="mb-4 rounded-xl border border-gray-200 bg-white">
+        <div className="border-b border-gray-100 px-5 py-3">
+          <div className="flex items-center gap-2">
+            <Download size={14} className="text-gray-400" />
+            <h3 className="text-[13px] font-semibold">Exportar Dados</h3>
+          </div>
+          <p className="mt-0.5 text-[11px] text-gray-400">
+            Baixe seus dados em CSV (compatível com Excel)
+          </p>
+        </div>
+        <div className="divide-y divide-gray-50">
+          {exportOptions.map((opt) => (
+            <div key={opt.type} className="flex items-center justify-between px-5 py-3">
+              <div className="flex items-center gap-3">
+                <span className="text-gray-400">{opt.icon}</span>
+                <span className="text-[13px] font-medium">{opt.label}</span>
+              </div>
+              <button
+                onClick={() => handleExport(opt.type)}
+                disabled={exportLoading !== null}
+                className={cn(
+                  'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-medium text-white disabled:opacity-50',
+                  opt.color
+                )}
+              >
+                {exportLoading === opt.type ? (
+                  <>
+                    <Loader2 size={11} className="animate-spin" />
+                    Exportando...
+                  </>
+                ) : (
+                  <>
+                    <Download size={11} />
+                    Exportar
+                  </>
+                )}
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* Sair */}
       <button

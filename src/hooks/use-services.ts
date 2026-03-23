@@ -45,3 +45,26 @@ export function useCreateService() {
     },
   })
 }
+
+export function useUpdateService() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: { id: string; name?: string; price?: number; duration?: string; cost?: number; is_active?: boolean }) => {
+      const { data, error } = await supabase.from('services').update(updates).eq('id', id).select().single()
+      if (error) throw error
+      return data
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['services'] }) },
+  })
+}
+
+export function useDeleteService() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('services').delete().eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['services'] }) },
+  })
+}
