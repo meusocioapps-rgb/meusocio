@@ -22,7 +22,9 @@ import { cn, getInitials } from '@/lib/utils'
 import { useUI } from '@/lib/store'
 import { useProfile } from '@/hooks/use-profile'
 
-const sections = [
+const ADMIN_EMAIL = 'meusocio.apps@gmail.com'
+
+const baseSections = [
   {
     title: 'Principal',
     items: [
@@ -42,21 +44,27 @@ const sections = [
       { href: '/reports', label: 'Relatorio', icon: FileText },
     ],
   },
-  {
-    title: 'Conta',
-    items: [
-      { href: '/admin', label: 'Admin', icon: Shield },
-      { href: '/profile', label: 'Perfil', icon: User },
-      { href: '/settings', label: 'Configuracoes', icon: Settings },
-      { href: '/support', label: 'Ajuda', icon: HelpCircle },
-    ],
-  },
 ]
 
 export function Sidebar() {
   const pathname = usePathname()
   const { drawerOpen, closeDrawer } = useUI()
   const { data: profile } = useProfile()
+
+  const isAdmin = profile?.email === ADMIN_EMAIL
+
+  const sections = [
+    ...baseSections,
+    {
+      title: 'Conta',
+      items: [
+        ...(isAdmin ? [{ href: '/admin', label: 'Admin', icon: Shield }] : []),
+        { href: '/profile', label: 'Perfil', icon: User },
+        { href: '/settings', label: 'Configuracoes', icon: Settings },
+        { href: '/support', label: 'Ajuda', icon: HelpCircle },
+      ],
+    },
+  ]
 
   const profileName = profile?.business_name || profile?.full_name || 'Meu Socio'
   const initials = getInitials(profileName)

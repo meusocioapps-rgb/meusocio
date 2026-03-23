@@ -8,7 +8,7 @@ import { useClients, useUpdateClient, useDeleteClient } from '@/hooks/use-client
 import { formatCurrency } from '@/lib/utils'
 import type { Settings } from '@/lib/types'
 import { toast } from '@/components/Toast'
-import { Plus, X, Search, Pencil, Trash2, Check } from 'lucide-react'
+import { Plus, X, Search, Pencil, Trash2, Check, Lock, Eye, EyeOff } from 'lucide-react'
 
 const supabase = createClient()
 
@@ -146,6 +146,9 @@ export default function SettingsPage() {
   return (
     <div className="mx-auto max-w-lg">
       <h2 className="mb-4 text-[15px] font-semibold">Configuracoes</h2>
+
+      {/* Redefinir Senha */}
+      <PasswordChangeSection />
 
       {/* Gerenciar Clientes */}
       <section className="mb-6">
@@ -582,6 +585,139 @@ export default function SettingsPage() {
         </div>
       )}
     </div>
+  )
+}
+
+function PasswordChangeSection() {
+  const [open, setOpen] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showNew, setShowNew] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+
+  const supabase = createClient()
+
+  const handleChangePassword = async () => {
+    setError('')
+    setSuccess('')
+
+    if (!newPassword.trim()) {
+      setError('Informe a nova senha.')
+      return
+    }
+    if (newPassword.length < 6) {
+      setError('A nova senha deve ter pelo menos 6 caracteres.')
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      setError('As senhas não coincidem.')
+      return
+    }
+
+    setLoading(true)
+    const { error: err } = await supabase.auth.updateUser({
+      password: newPassword,
+    })
+    setLoading(false)
+
+    if (err) {
+      setError(`Erro ao alterar senha: ${err.message}`)
+    } else {
+      setSuccess('Senha alterada com sucesso!')
+      setCurrentPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+      setTimeout(() => {
+        setOpen(false)
+        setSuccess('')
+      }, 2000)
+    }
+  }
+
+  return (
+    <section className="mb-6">
+      <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-gray-400">
+        Seguranca
+      </h3>
+      <div className="rounded-xl border border-gray-200 bg-white">
+        <button
+          onClick={() => setOpen(!open)}
+          className="flex w-full items-center gap-3 px-4 py-3"
+        >
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100">
+            <Lock size={15} className="text-gray-500" />
+          </div>
+          <div className="flex-1 text-left">
+            <div className="text-[13px] font-medium">Redefinir senha</div>
+            <div className="text-[11px] text-gray-400">Altere sua senha de acesso</div>
+          </div>
+          <span className="text-gray-300">{open ? '▲' : '▼'}</span>
+        </button>
+
+        {open && (
+          <div className="border-t border-gray-100 px-4 py-4 space-y-3">
+            <div>
+              <label className="mb-1 block text-[10px] font-semibold uppercase text-gray-500">
+                Nova senha
+              </label>
+              <div className="relative">
+                <input
+                  type={showNew ? 'text' : 'password'}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Minimo 6 caracteres"
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 pr-9 text-[13px] outline-none focus:border-brand-900"
+                  minLength={6}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNew(!showNew)}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400"
+                >
+                  {showNew ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-[10px] font-semibold uppercase text-gray-500">
+                Confirmar nova senha
+              </label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Repita a nova senha"
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-[13px] outline-none focus:border-brand-900"
+                minLength={6}
+              />
+            </div>
+
+            {error && (
+              <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[11px] text-red-600">
+                {error}
+              </div>
+            )}
+            {success && (
+              <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-[11px] text-green-700">
+                {success}
+              </div>
+            )}
+
+            <button
+              onClick={handleChangePassword}
+              disabled={loading}
+              className="w-full rounded-lg bg-brand-900 py-2.5 text-xs font-medium text-white disabled:opacity-50"
+            >
+              {loading ? 'Alterando...' : 'Alterar senha'}
+            </button>
+          </div>
+        )}
+      </div>
+    </section>
   )
 }
 
