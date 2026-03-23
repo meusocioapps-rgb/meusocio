@@ -58,9 +58,24 @@ export function useCreateClient() {
       source?: string
       notes?: string
     }) => {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Usuário não autenticado')
+
+      // Generate client code
+      const { count } = await supabase
+        .from('clients')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+      const nextCode = '#' + String((count ?? 0) + 1).padStart(5, '0')
+
       const { data, error } = await supabase
         .from('clients')
-        .insert(client)
+        .insert({
+          ...client,
+          user_id: user.id,
+          code: nextCode,
+        })
         .select()
         .single()
       if (error) throw error

@@ -7,9 +7,10 @@ import {
   useNextAppointment,
   useNotifications,
 } from '@/hooks/use-dashboard'
-import { useTodayAppointments, useConfirmAppointment } from '@/hooks/use-appointments'
+import { useTodayAppointments, useConfirmAppointment, useAppointmentsByRange } from '@/hooks/use-appointments'
 import { useClients } from '@/hooks/use-clients'
 import { useFinancialSummary } from '@/hooks/use-finances'
+import { getCurrentMonth } from '@/lib/utils'
 import {
   formatCurrency,
   formatDate,
@@ -32,6 +33,7 @@ import {
 } from 'lucide-react'
 import { AppointmentModal } from '@/components/AppointmentModal'
 import { PostAppointmentModal } from '@/components/PostAppointmentModal'
+import { toast } from '@/components/Toast'
 import type { AppointmentWithClient } from '@/lib/types'
 
 export default function DashboardPage() {
@@ -42,6 +44,16 @@ export default function DashboardPage() {
   const { data: summary } = useFinancialSummary()
   const { data: clients } = useClients()
   const confirmMutation = useConfirmAppointment()
+
+  // Calcular "a receber" dos agendamentos pendentes do mês
+  const now = new Date()
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10)
+  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10)
+  const { data: monthAppts } = useAppointmentsByRange(monthStart, monthEnd)
+
+  const pendingApptsValue = (monthAppts ?? [])
+    .filter((a) => a.status === 'scheduled' || a.status === 'confirmed')
+    .reduce((sum, a) => sum + a.estimated_value, 0)
 
   // Modal state
   const [selectedAppt, setSelectedAppt] = useState<AppointmentWithClient | null>(null)
@@ -134,10 +146,16 @@ export default function DashboardPage() {
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
             <button
-              onClick={() => confirmMutation.mutate(next.id)}
-              className="rounded-lg border border-white/30 bg-white/20 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/30"
+              onClick={() => {
+                confirmMutation.mutate(next.id, {
+                  onSuccess: () => toast('✅ Atendimento confirmado!'),
+                  onError: (err) => toast(`Erro: ${err.message}`),
+                })
+              }}
+              disabled={confirmMutation.isPending}
+              className="rounded-lg border border-white/30 bg-white/20 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/30 disabled:opacity-50"
             >
-              ✓ Confirmar
+              {confirmMutation.isPending ? '...' : '✓ Confirmar'}
             </button>
             <button
               onClick={() => {
@@ -214,7 +232,7 @@ export default function DashboardPage() {
       <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
         <KpiCard
           label="A receber"
-          value={formatCurrency(stats?.pending_income ?? 0)}
+          value={formatCurrency(pendingApptsValue + (stats?.pending_income ?? 0))}
           icon={<DollarSign size={14} />}
           iconBg="bg-green-100"
           valueColor="text-brand-900"
