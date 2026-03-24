@@ -17,6 +17,13 @@ CREATE POLICY "profiles_select_policy" ON profiles
 DROP POLICY IF EXISTS "admin_update_profiles" ON profiles;
 CREATE POLICY "admin_update_profiles" ON profiles
   FOR UPDATE
+  USING ((auth.jwt() ->> 'email') = 'meusocio.apps@gmail.com')
+  WITH CHECK ((auth.jwt() ->> 'email') = 'meusocio.apps@gmail.com');
+
+-- Admin can DELETE profiles
+DROP POLICY IF EXISTS "admin_delete_profiles" ON profiles;
+CREATE POLICY "admin_delete_profiles" ON profiles
+  FOR DELETE
   USING ((auth.jwt() ->> 'email') = 'meusocio.apps@gmail.com');
 
 -- 2. SERVICES — admin can read all

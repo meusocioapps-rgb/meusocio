@@ -165,6 +165,9 @@ export default function AdminPage() {
   const [notifMessage, setNotifMessage] = useState('')
   const [notifType, setNotifType] = useState<'push' | 'email' | 'whatsapp'>('push')
 
+  // Confirm dialog
+  const [confirmAction, setConfirmAction] = useState<{ type: 'suspend' | 'delete'; user: Profile } | null>(null)
+
   // Save profile mutation
   const saveProfile = useMutation({
     mutationFn: async (data: { id: string; full_name: string; business_name: string; phone: string }) => {
@@ -174,6 +177,7 @@ export default function AdminPage() {
           full_name: data.full_name || null,
           business_name: data.business_name || null,
           phone: data.phone || null,
+          updated_at: new Date().toISOString(),
         })
         .eq('id', data.id)
       if (error) throw error
@@ -181,9 +185,69 @@ export default function AdminPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] })
       setEditMode(false)
+      // Update selectedUser locally too
+      if (selectedUser) {
+        setSelectedUser({
+          ...selectedUser,
+          full_name: editForm.full_name || null,
+          business_name: editForm.business_name || null,
+          phone: editForm.phone || null,
+        })
+      }
       toast('Perfil atualizado com sucesso!')
     },
-    onError: () => toast('Erro ao salvar perfil'),
+    onError: (err) => toast(`Erro ao salvar: ${err instanceof Error ? err.message : 'verifique se rodou o SQL de admin no Supabase'}`),
+  })
+
+  // Suspend user (set a flag in profile)
+  const suspendUser = useMutation({
+    mutationFn: async (userId: string) => {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_suspended: true, updated_at: new Date().toISOString() })
+        .eq('id', userId)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] })
+      setConfirmAction(null)
+      toast('Usuario suspenso com sucesso')
+    },
+    onError: () => toast('Erro ao suspender usuario'),
+  })
+
+  // Reactivate user
+  const reactivateUser = useMutation({
+    mutationFn: async (userId: string) => {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_suspended: false, updated_at: new Date().toISOString() })
+        .eq('id', userId)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] })
+      toast('Usuario reativado com sucesso')
+    },
+    onError: () => toast('Erro ao reativar usuario'),
+  })
+
+  // Delete user profile (soft delete - removes profile data)
+  const deleteUser = useMutation({
+    mutationFn: async (userId: string) => {
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] })
+      setSelectedUser(null)
+      setConfirmAction(null)
+      toast('Perfil do usuario removido')
+    },
+    onError: () => toast('Erro ao remover usuario'),
   })
 
   // Mark feedback as read
@@ -358,6 +422,28 @@ export default function AdminPage() {
                   <Phone size={13} /> WhatsApp
                 </a>
               )}
+              <div className="w-full border-t border-gray-100 my-1" />
+              {(selectedUser as Profile & { is_suspended?: boolean }).is_suspended ? (
+                <button
+                  onClick={() => reactivateUser.mutate(selectedUser.id)}
+                  className="flex items-center gap-1.5 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-[11px] font-medium text-green-700 hover:bg-green-100"
+                >
+                  <UserCheck size={13} /> Reativar usuario
+                </button>
+              ) : (
+                <button
+                  onClick={() => setConfirmAction({ type: 'suspend', user: selectedUser })}
+                  className="flex items-center gap-1.5 rounded-lg border border-yellow-200 bg-yellow-50 px-3 py-2 text-[11px] font-medium text-yellow-700 hover:bg-yellow-100"
+                >
+                  <Shield size={13} /> Suspender acesso
+                </button>
+              )}
+              <button
+                onClick={() => setConfirmAction({ type: 'delete', user: selectedUser })}
+                className="flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[11px] font-medium text-red-600 hover:bg-red-100"
+              >
+                <X size={13} /> Excluir perfil
+              </button>
             </div>
           )}
         </div>
@@ -486,6 +572,44 @@ export default function AdminPage() {
               toast('Funcionalidade em desenvolvimento')
             }}
           />
+        )}
+
+        {/* Confirm Action Modal */}
+        {confirmAction && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 px-4">
+            <div className="w-full max-w-sm rounded-xl bg-white p-5 shadow-xl">
+              <h3 className="text-[14px] font-semibold text-gray-800">
+                {confirmAction.type === 'suspend' ? 'Suspender usuario?' : 'Excluir perfil?'}
+              </h3>
+              <p className="mt-2 text-[12px] text-gray-500">
+                {confirmAction.type === 'suspend'
+                  ? `O usuario "${confirmAction.user.business_name || confirmAction.user.full_name}" tera o acesso suspenso. Voce pode reativar depois.`
+                  : `O perfil de "${confirmAction.user.business_name || confirmAction.user.full_name}" sera removido. Esta acao nao pode ser desfeita.`}
+              </p>
+              <div className="mt-4 flex gap-2">
+                <button
+                  onClick={() => setConfirmAction(null)}
+                  className="flex-1 rounded-lg border border-gray-200 py-2 text-xs font-medium text-gray-600"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    if (confirmAction.type === 'suspend') {
+                      suspendUser.mutate(confirmAction.user.id)
+                    } else {
+                      deleteUser.mutate(confirmAction.user.id)
+                    }
+                  }}
+                  className={`flex-1 rounded-lg py-2 text-xs font-semibold text-white ${
+                    confirmAction.type === 'suspend' ? 'bg-yellow-600' : 'bg-red-600'
+                  }`}
+                >
+                  {confirmAction.type === 'suspend' ? 'Suspender' : 'Excluir'}
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     )
