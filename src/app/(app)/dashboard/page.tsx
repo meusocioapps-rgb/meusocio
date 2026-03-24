@@ -9,6 +9,7 @@ import {
 } from '@/hooks/use-dashboard'
 import { useTodayAppointments, useConfirmAppointment, useAppointmentsByRange } from '@/hooks/use-appointments'
 import { useClients } from '@/hooks/use-clients'
+import { useSettings } from '@/hooks/use-profile'
 import { useFinancialSummary } from '@/hooks/use-finances'
 import { getCurrentMonth } from '@/lib/utils'
 import {
@@ -40,6 +41,7 @@ export default function DashboardPage() {
   const { data: todayAppts } = useTodayAppointments()
   const { data: notifications } = useNotifications()
   const { data: summary } = useFinancialSummary()
+  const { data: settings } = useSettings()
   const { data: clients } = useClients()
   const confirmMutation = useConfirmAppointment()
 
@@ -97,63 +99,69 @@ export default function DashboardPage() {
     )
   }
 
-  // Monthly goal progress
-  const revenue = stats?.revenue ?? 0
-  const monthlyGoal = 5000 // TODO: from settings
-  const goalPct = monthlyGoal > 0 ? Math.min((revenue / monthlyGoal) * 100, 100) : 0
+  // Monthly goal progress (lucro liquido = receitas - despesas)
+  const profit = stats?.profit ?? 0
+  const monthlyGoal = settings?.monthly_goal ?? 5000
+  const goalPct = monthlyGoal > 0 ? Math.min(Math.max((profit / monthlyGoal) * 100, 0), 100) : 0
 
   return (
     <div>
       {/* Alertas / Notificações */}
       {notifications && notifications.length > 0 && (
         <div className="mb-4 space-y-2">
-          {notifications.slice(0, 3).map((n, i) => (
-            <div
-              key={i}
-              className={cn(
-                'flex items-center gap-3 rounded-xl border px-4 py-3',
-                n.type === 'birthday'
-                  ? 'border-pink-200 bg-pink-50'
-                  : n.type === 'inactive_client'
-                    ? 'border-red-200 bg-red-50'
-                    : 'border-orange-200 bg-orange-50'
-              )}
-            >
-              <span className="text-lg">
-                {n.type === 'birthday' ? '🎂' : n.type === 'inactive_client' ? '⚠️' : '💰'}
-              </span>
-              <div className="flex-1">
-                <div className={cn(
-                  'text-xs font-semibold',
-                  n.type === 'birthday' ? 'text-pink-800' : n.type === 'inactive_client' ? 'text-red-800' : 'text-orange-800'
-                )}>
-                  {n.type === 'birthday'
-                    ? `Aniversário de ${n.client_name}`
-                    : n.type === 'inactive_client'
-                      ? `${n.client_name} está inativo`
-                      : `${n.description} vence em ${n.days_until} dias`}
+          {notifications.slice(0, 3).map((n, i) => {
+            const cardClasses = cn(
+              'flex items-center gap-3 rounded-xl border px-4 py-3 min-h-[44px]',
+              n.type === 'birthday'
+                ? 'border-pink-200 bg-pink-50'
+                : n.type === 'inactive_client'
+                  ? 'border-red-200 bg-red-50'
+                  : 'border-orange-200 bg-orange-50'
+            )
+            const cardContent = (
+              <>
+                <span className="text-lg">
+                  {n.type === 'birthday' ? '🎂' : n.type === 'inactive_client' ? '⚠️' : '💰'}
+                </span>
+                <div className="flex-1">
+                  <div className={cn(
+                    'text-xs font-semibold',
+                    n.type === 'birthday' ? 'text-pink-800' : n.type === 'inactive_client' ? 'text-red-800' : 'text-orange-800'
+                  )}>
+                    {n.type === 'birthday'
+                      ? `Aniversário de ${n.client_name}`
+                      : n.type === 'inactive_client'
+                        ? `${n.client_name} está inativo`
+                        : `${n.description} vence em ${n.days_until} dias`}
+                  </div>
+                  <div className={cn(
+                    'text-[10px]',
+                    n.type === 'birthday' ? 'text-pink-600' : n.type === 'inactive_client' ? 'text-red-600' : 'text-orange-600'
+                  )}>
+                    {n.days_until === 0
+                      ? 'Hoje!'
+                      : n.days_until > 0
+                        ? `Em ${n.days_until} dias`
+                        : `Há ${Math.abs(n.days_until)} dias`}
+                  </div>
                 </div>
-                <div className={cn(
-                  'text-[10px]',
-                  n.type === 'birthday' ? 'text-pink-600' : n.type === 'inactive_client' ? 'text-red-600' : 'text-orange-600'
-                )}>
-                  {n.days_until === 0
-                    ? 'Hoje!'
-                    : n.days_until > 0
-                      ? `Em ${n.days_until} dias`
-                      : `Há ${Math.abs(n.days_until)} dias`}
-                </div>
+                {n.client_id && (
+                  <span className="text-[10px] font-medium text-brand-900">
+                    Ver →
+                  </span>
+                )}
+              </>
+            )
+            return n.client_id ? (
+              <Link key={i} href={`/clients/${n.client_id}`} className={cardClasses}>
+                {cardContent}
+              </Link>
+            ) : (
+              <div key={i} className={cardClasses}>
+                {cardContent}
               </div>
-              {n.client_id && (
-                <Link
-                  href={`/clients/${n.client_id}`}
-                  className="text-[10px] font-medium text-brand-900"
-                >
-                  Ver →
-                </Link>
-              )}
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
 
@@ -248,10 +256,10 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Target size={14} className="text-brand-900" />
-            <span className="text-[12px] font-semibold">Meta mensal</span>
+            <span className="text-[12px] font-semibold">Meta de lucro</span>
           </div>
           <span className="text-[11px] text-gray-400">
-            {formatCurrency(revenue)} / {formatCurrency(monthlyGoal)}
+            {formatCurrency(profit)} / {formatCurrency(monthlyGoal)}
           </span>
         </div>
         <div className="mt-2 h-2 overflow-hidden rounded-full bg-gray-100">

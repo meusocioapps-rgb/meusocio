@@ -17,7 +17,7 @@ import {
   statusColor,
   cn,
 } from '@/lib/utils'
-import { ArrowLeft, Phone, Mail, Instagram, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Phone, Mail, Instagram, ExternalLink, MapPin } from 'lucide-react'
 import { toast } from '@/components/Toast'
 
 export default function ClientDetailPage() {
@@ -128,6 +128,12 @@ export default function ClientDetailPage() {
                   <Instagram size={12} />
                   {client.instagram}
                 </a>
+              )}
+              {client.address && (
+                <span className="flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-[11px] font-medium text-gray-600">
+                  <MapPin size={12} />
+                  {client.address}
+                </span>
               )}
             </div>
           </div>

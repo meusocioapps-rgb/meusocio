@@ -26,6 +26,7 @@ export interface Profile {
   website: string | null
   address: string | null
   avatar_url: string | null
+  layout_type: string | null
   created_at: string
   updated_at: string
 }
@@ -66,6 +67,7 @@ export interface Client {
   instagram: string | null
   birth_date: string | null
   source: string
+  address: string | null
   notes: string | null
   custom_data: Record<string, unknown>
   is_removed_from_reactivation: boolean

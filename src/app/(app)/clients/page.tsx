@@ -155,6 +155,7 @@ function NewClientModal({
     instagram?: string
     birth_date?: string
     source?: string
+    address?: string
   }) => Promise<void>
   loading: boolean
 }) {
@@ -165,6 +166,7 @@ function NewClientModal({
     instagram: '',
     birth_date: '',
     source: 'Indicacao',
+    address: '',
   })
 
   const set = (key: string, value: string) =>
@@ -179,6 +181,7 @@ function NewClientModal({
       ...(form.instagram && { instagram: form.instagram }),
       ...(form.birth_date && { birth_date: form.birth_date }),
       ...(form.source && { source: form.source }),
+      ...(form.address && { address: form.address }),
     })
   }
 
@@ -278,6 +281,19 @@ function NewClientModal({
                 <option>Outro</option>
               </select>
             </div>
+          </div>
+
+          <div className="mb-3">
+            <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-gray-500">
+              Endereco (opcional)
+            </label>
+            <input
+              type="text"
+              value={form.address}
+              onChange={(e) => set('address', e.target.value)}
+              placeholder="Rua, numero, bairro..."
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-[13px] outline-none focus:border-brand-900"
+            />
           </div>
         </div>
 

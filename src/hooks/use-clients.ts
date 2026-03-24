@@ -56,6 +56,7 @@ export function useCreateClient() {
       instagram?: string
       birth_date?: string
       source?: string
+      address?: string
       notes?: string
     }) => {
       // Get current user
@@ -101,6 +102,7 @@ export function useUpdateClient() {
       instagram: string
       birth_date: string
       source: string
+      address: string
       notes: string
       is_removed_from_reactivation: boolean
       is_removed_from_recurrence: boolean

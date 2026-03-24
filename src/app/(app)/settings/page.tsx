@@ -370,10 +370,10 @@ export default function SettingsPage() {
         </h3>
         <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3">
           <div className="flex-1">
-            <div className="text-[13px] font-medium">Meta de faturamento</div>
+            <div className="text-[13px] font-medium">Meta de lucro liquido</div>
             <div className="text-[11px] text-gray-400">
               {monthlyGoal > 0
-                ? `Atual: ${formatCurrency(monthlyGoal)}`
+                ? `Atual: ${formatCurrency(monthlyGoal)} (receitas - despesas)`
                 : 'Nao definida'}
             </div>
           </div>
