@@ -37,11 +37,7 @@ export default function FeedbackPage() {
 
       const typeLabel = type === 'sugestao' ? 'Sugestao de melhoria' : type === 'bug' ? 'Relato de bug' : 'Outro'
 
-      // Send email via Supabase Edge Function or direct insert
-      // For now, we'll insert into a feedback table and also try to send via mailto
-      // The admin will see these in the admin panel
-
-      // Try inserting into a feedback table (will be created)
+      // Save to feedback table
       const { error: insertError } = await supabase
         .from('feedback')
         .insert({
@@ -54,23 +50,24 @@ export default function FeedbackPage() {
         })
 
       if (insertError) {
-        // If table doesn't exist yet, fall back to mailto
-        console.warn('Feedback table not found, using mailto fallback:', insertError.message)
+        console.warn('Erro ao salvar feedback:', insertError.message)
+      }
 
-        const subject = encodeURIComponent(`[Meu Socio Feedback] ${typeLabel} - ${userName}`)
-        const body = encodeURIComponent(
-          `FEEDBACK - MEU SOCIO\n` +
-          `========================\n\n` +
-          `Tipo: ${typeLabel}\n` +
-          `Usuario: ${userName}\n` +
-          `Email: ${userEmail}\n` +
-          `Telefone: ${userPhone}\n\n` +
-          `Mensagem:\n${message.trim()}\n\n` +
-          `========================\n` +
-          `Enviado em: ${new Date().toLocaleString('pt-BR')}`
-        )
-
-        window.open(`mailto:meusocio.apps@gmail.com?subject=${subject}&body=${body}`, '_blank')
+      // Send email notification via API route
+      try {
+        await fetch('/api/feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userName,
+            userEmail,
+            userPhone,
+            type,
+            message: message.trim(),
+          }),
+        })
+      } catch (emailErr) {
+        console.warn('Email fallback failed:', emailErr)
       }
 
       setSent(true)
