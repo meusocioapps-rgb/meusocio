@@ -21,6 +21,7 @@ const titles: Record<string, string> = {
   '/settings': 'Configurações',
   '/overview': 'Visão Geral',
   '/profile': 'Meu Perfil',
+  '/feedback': 'Feedback',
   '/support': 'Ajuda',
   '/admin': 'Administração',
 }

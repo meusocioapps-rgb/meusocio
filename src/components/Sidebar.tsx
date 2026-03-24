@@ -16,6 +16,7 @@ import {
   Settings,
   HelpCircle,
   Shield,
+  MessageSquare,
   X,
 } from 'lucide-react'
 import { cn, getInitials } from '@/lib/utils'
@@ -61,6 +62,7 @@ export function Sidebar() {
         ...(isAdmin ? [{ href: '/admin', label: 'Admin', icon: Shield }] : []),
         { href: '/profile', label: 'Perfil', icon: User },
         { href: '/settings', label: 'Configuracoes', icon: Settings },
+        { href: '/feedback', label: 'Feedback', icon: MessageSquare },
         { href: '/support', label: 'Ajuda', icon: HelpCircle },
       ],
     },
