@@ -7,11 +7,14 @@ import {
   useFixedCategoryEntries,
   useCreateExpense,
   useUpdateEntryStatus,
+  useCreateFixedExpense,
+  useUpdateFixedExpense,
+  useDeleteFixedExpense,
 } from '@/hooks/use-finances'
 import { useAppointmentsByRange } from '@/hooks/use-appointments'
 import type { FinancialEntry } from '@/lib/types'
 import { formatCurrency, formatDate, cn } from '@/lib/utils'
-import { Plus, X, Car, UtensilsCrossed, Check, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Plus, X, Car, UtensilsCrossed, Check, ChevronLeft, ChevronRight, Pencil, Trash2 } from 'lucide-react'
 import { toast } from '@/components/Toast'
 
 const MONTH_NAMES = [
@@ -44,6 +47,14 @@ export default function ExpensesPage() {
   const { data: fixedCategoryEntries } = useFixedCategoryEntries()
   const createExpense = useCreateExpense()
   const updateStatus = useUpdateEntryStatus()
+  const createFixed = useCreateFixedExpense()
+  const updateFixed = useUpdateFixedExpense()
+  const deleteFixed = useDeleteFixedExpense()
+
+  const [showFixedModal, setShowFixedModal] = useState(false)
+  const [editingFixedId, setEditingFixedId] = useState<string | null>(null)
+  const [editFixedData, setEditFixedData] = useState({ description: '', amount: 0, due_day: 1 })
+  const [deletingFixedId, setDeletingFixedId] = useState<string | null>(null)
 
   const isFutureMonth =
     selectedYear > now.getFullYear() ||
@@ -491,6 +502,167 @@ export default function ExpensesPage() {
         </div>
       </section>
 
+      {/* Gerenciar Despesas Fixas */}
+      <section className="mb-4 rounded-xl border border-gray-200 bg-white">
+        <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+          <h3 className="text-[13px] font-semibold text-gray-700">
+            Despesas Fixas
+            <span className="ml-2 text-[10px] font-normal text-gray-400">
+              {(fixedExpenses ?? []).length} cadastrada{(fixedExpenses ?? []).length !== 1 ? 's' : ''} · {formatCurrency(totalFixed)}/mês
+            </span>
+          </h3>
+          <button
+            onClick={() => setShowFixedModal(true)}
+            className="flex items-center gap-1 rounded-lg bg-brand-900 px-2.5 py-1.5 text-[10px] font-medium text-white"
+          >
+            <Plus size={12} />
+            Nova fixa
+          </button>
+        </div>
+        {(fixedExpenses ?? []).length === 0 ? (
+          <div className="py-8 text-center text-[13px] text-gray-400">
+            Nenhuma despesa fixa cadastrada
+          </div>
+        ) : (
+          <div className="max-h-[300px] overflow-y-auto">
+            {(fixedExpenses ?? []).map((fe) => (
+              <div key={fe.id} className="border-b border-gray-50 px-4 py-3 last:border-0">
+                {editingFixedId === fe.id ? (
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={editFixedData.description}
+                      onChange={(e) => setEditFixedData({ ...editFixedData, description: e.target.value })}
+                      placeholder="Descricao"
+                      className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-[13px] outline-none"
+                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="mb-0.5 block text-[9px] font-semibold uppercase text-gray-400">Valor (R$)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={editFixedData.amount}
+                          onChange={(e) => setEditFixedData({ ...editFixedData, amount: Number(e.target.value) })}
+                          className="w-full rounded-lg border border-gray-200 px-2 py-1.5 text-[13px] outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-0.5 block text-[9px] font-semibold uppercase text-gray-400">Dia vencimento</label>
+                        <input
+                          type="number"
+                          min={1}
+                          max={31}
+                          value={editFixedData.due_day}
+                          onChange={(e) => setEditFixedData({ ...editFixedData, due_day: Number(e.target.value) })}
+                          className="w-full rounded-lg border border-gray-200 px-2 py-1.5 text-[13px] outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setEditingFixedId(null)}
+                        className="flex-1 rounded-lg border border-gray-300 py-1.5 text-[11px] font-medium text-gray-600"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        onClick={async () => {
+                          try {
+                            await updateFixed.mutateAsync({
+                              id: fe.id,
+                              description: editFixedData.description,
+                              amount: editFixedData.amount,
+                              due_day: editFixedData.due_day,
+                            })
+                            setEditingFixedId(null)
+                            toast('Despesa fixa atualizada!')
+                          } catch {
+                            toast('Erro ao atualizar')
+                          }
+                        }}
+                        disabled={updateFixed.isPending || !editFixedData.description.trim()}
+                        className="flex-1 rounded-lg bg-brand-900 py-1.5 text-[11px] font-medium text-white disabled:opacity-50"
+                      >
+                        {updateFixed.isPending ? 'Salvando...' : 'Salvar'}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[12px] font-medium">{fe.description}</div>
+                      <div className="text-[10px] text-gray-400">
+                        Vence dia {fe.due_day ?? '—'}
+                      </div>
+                    </div>
+                    <span className="text-[13px] font-semibold text-red-600">
+                      {formatCurrency(fe.amount)}
+                    </span>
+                    <div className="flex gap-1.5 flex-shrink-0">
+                      <button
+                        onClick={() => {
+                          setEditingFixedId(fe.id)
+                          setEditFixedData({
+                            description: fe.description,
+                            amount: fe.amount,
+                            due_day: fe.due_day ?? 1,
+                          })
+                        }}
+                        className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:border-brand-500 hover:text-brand-900"
+                        title="Editar"
+                      >
+                        <Pencil size={13} />
+                      </button>
+                      <button
+                        onClick={() => setDeletingFixedId(fe.id)}
+                        className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:border-red-400 hover:text-red-500"
+                        title="Excluir"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Confirm delete fixed expense */}
+      {deletingFixedId && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-xs rounded-xl bg-white p-5 shadow-xl">
+            <h3 className="text-[14px] font-semibold">Excluir despesa fixa?</h3>
+            <p className="mt-1 text-[12px] text-gray-500">Essa acao nao pode ser desfeita. A despesa nao aparecera mais em meses futuros.</p>
+            <div className="mt-4 flex gap-2">
+              <button
+                onClick={() => setDeletingFixedId(null)}
+                className="flex-1 rounded-lg border border-gray-300 py-2 text-xs font-medium text-gray-600"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    await deleteFixed.mutateAsync(deletingFixedId)
+                    setDeletingFixedId(null)
+                    toast('Despesa fixa excluida!')
+                  } catch {
+                    toast('Erro ao excluir')
+                  }
+                }}
+                disabled={deleteFixed.isPending}
+                className="flex-1 rounded-lg bg-red-600 py-2 text-xs font-medium text-white disabled:opacity-50"
+              >
+                {deleteFixed.isPending ? 'Excluindo...' : 'Excluir'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* A Pagar section */}
       <section className="mb-4 rounded-xl border border-gray-200 bg-white">
         <div className="border-b border-gray-100 px-4 py-3">
@@ -668,6 +840,62 @@ export default function ExpensesPage() {
                 <button type="button" onClick={() => setShowModal(false)} className="flex-1 rounded-lg border border-brand-900 py-2 text-xs font-medium text-brand-900">Cancelar</button>
                 <button type="submit" disabled={createExpense.isPending} className="flex-1 rounded-lg bg-brand-900 py-2 text-xs font-medium text-white disabled:opacity-50">
                   {createExpense.isPending ? 'Salvando...' : 'Salvar'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Nova Despesa Fixa */}
+      {showFixedModal && (
+        <div
+          className="fixed inset-0 z-[200] flex items-end justify-center bg-black/40 p-0 md:items-center md:p-4"
+          onClick={(e) => e.target === e.currentTarget && setShowFixedModal(false)}
+        >
+          <div className="w-full max-w-md rounded-t-2xl bg-white md:rounded-2xl">
+            <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
+              <h3 className="text-[15px] font-semibold">Nova Despesa Fixa</h3>
+              <button onClick={() => setShowFixedModal(false)} className="text-gray-400">
+                <X size={22} />
+              </button>
+            </div>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault()
+                const fd = new FormData(e.currentTarget)
+                try {
+                  await createFixed.mutateAsync({
+                    description: fd.get('description') as string,
+                    amount: Number(fd.get('amount')),
+                    due_day: Number(fd.get('due_day')) || null,
+                  })
+                  setShowFixedModal(false)
+                  toast('Despesa fixa criada!')
+                } catch {
+                  toast('Erro ao criar despesa fixa')
+                }
+              }}
+              className="p-5"
+            >
+              <div className="mb-3">
+                <label className="mb-1 block text-[10px] font-semibold uppercase text-gray-500">Descricao *</label>
+                <input name="description" type="text" placeholder="Ex: Aluguel, Internet, DAS..." className="w-full rounded-lg border border-gray-200 px-3 py-2 text-[13px] outline-none" required />
+              </div>
+              <div className="mb-3 grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-[10px] font-semibold uppercase text-gray-500">Valor (R$) *</label>
+                  <input name="amount" type="number" step="0.01" placeholder="0.00" className="w-full rounded-lg border border-gray-200 px-3 py-2 text-[13px] outline-none" required />
+                </div>
+                <div>
+                  <label className="mb-1 block text-[10px] font-semibold uppercase text-gray-500">Dia vencimento</label>
+                  <input name="due_day" type="number" min={1} max={31} placeholder="10" className="w-full rounded-lg border border-gray-200 px-3 py-2 text-[13px] outline-none" />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button type="button" onClick={() => setShowFixedModal(false)} className="flex-1 rounded-lg border border-brand-900 py-2 text-xs font-medium text-brand-900">Cancelar</button>
+                <button type="submit" disabled={createFixed.isPending} className="flex-1 rounded-lg bg-brand-900 py-2 text-xs font-medium text-white disabled:opacity-50">
+                  {createFixed.isPending ? 'Salvando...' : 'Salvar'}
                 </button>
               </div>
             </form>

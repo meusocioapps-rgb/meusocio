@@ -42,6 +42,61 @@ export function useFixedExpenses() {
   })
 }
 
+export function useCreateFixedExpense() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (entry: { description: string; amount: number; due_day: number | null; category?: string }) => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+      const { error } = await supabase.from('fixed_expenses').insert({
+        user_id: user.id,
+        description: entry.description,
+        amount: entry.amount,
+        due_day: entry.due_day,
+        category: entry.category || 'fixed',
+        is_active: true,
+      })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['finances'] })
+    },
+  })
+}
+
+export function useUpdateFixedExpense() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (params: { id: string; description?: string; amount?: number; due_day?: number | null }) => {
+      const updates: Record<string, unknown> = {}
+      if (params.description !== undefined) updates.description = params.description
+      if (params.amount !== undefined) updates.amount = params.amount
+      if (params.due_day !== undefined) updates.due_day = params.due_day
+      const { error } = await supabase
+        .from('fixed_expenses')
+        .update(updates)
+        .eq('id', params.id)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['finances'] })
+    },
+  })
+}
+
+export function useDeleteFixedExpense() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('fixed_expenses').delete().eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['finances'] })
+    },
+  })
+}
+
 export function useCreateIncome() {
   const queryClient = useQueryClient()
 
