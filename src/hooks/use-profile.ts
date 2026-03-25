@@ -18,11 +18,30 @@ export function useProfile() {
         .select('*')
         .eq('id', user.id)
         .single()
-      if (error) throw error
+      if (error) {
+        // If profile doesn't exist, return a minimal profile from auth
+        return {
+          id: user.id,
+          full_name: user.user_metadata?.full_name ?? null,
+          business_name: '',
+          trade: '',
+          document: null,
+          phone: null,
+          email: user.email ?? null,
+          instagram: null,
+          website: null,
+          address: null,
+          avatar_url: null,
+          layout_type: null,
+          created_at: user.created_at,
+          updated_at: '',
+        } as Profile
+      }
       // Always use auth email (profiles.email may be null)
       return { ...data, email: data.email || user.email } as Profile
     },
     staleTime: 120_000,
+    retry: 1,
   })
 }
 

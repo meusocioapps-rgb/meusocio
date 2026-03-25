@@ -1,22 +1,39 @@
 'use client'
 
 import { usePathname, useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Sidebar } from '@/components/Sidebar'
 import { AdminSidebar } from '@/components/AdminSidebar'
 import { TopBar } from '@/components/TopBar'
 import { BottomTabs } from '@/components/BottomTabs'
 import { MobileDrawer } from '@/components/MobileDrawer'
 import { useProfile } from '@/hooks/use-profile'
+import { createClient } from '@/lib/supabase/client'
 
 const ADMIN_EMAIL = 'meusocio.apps@gmail.com'
 
+function useAuthEmail() {
+  return useQuery({
+    queryKey: ['auth-email'],
+    queryFn: async () => {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      return user?.email ?? null
+    },
+    staleTime: Infinity,
+    retry: 1,
+  })
+}
+
 export function LayoutShell({ children }: { children: React.ReactNode }) {
-  const { data: profile, isLoading } = useProfile()
+  const { data: profile, isLoading: profileLoading, isError } = useProfile()
+  const { data: authEmail, isLoading: emailLoading } = useAuthEmail()
   const pathname = usePathname()
   const router = useRouter()
 
-  const isAdmin = profile?.email === ADMIN_EMAIL
+  const isLoading = emailLoading
+  const isAdmin = authEmail === ADMIN_EMAIL || profile?.email === ADMIN_EMAIL
   const isAdminRoute = pathname.startsWith('/admin')
 
   // Redirect admin to /admin on first load if they hit /dashboard
@@ -33,7 +50,7 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
     }
   }, [isAdmin, isLoading, isAdminRoute, router])
 
-  // Show loading while checking auth
+  // Show loading while checking auth (only wait for auth email, not profile)
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
