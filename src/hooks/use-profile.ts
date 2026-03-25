@@ -19,7 +19,8 @@ export function useProfile() {
         .eq('id', user.id)
         .single()
       if (error) throw error
-      return data as Profile
+      // Always use auth email (profiles.email may be null)
+      return { ...data, email: data.email || user.email } as Profile
     },
     staleTime: 120_000,
   })
