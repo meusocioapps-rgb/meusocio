@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import {
   useAppointmentsByDate,
   useAppointmentsByRange,
@@ -83,7 +83,8 @@ export default function SchedulePage() {
       {view === 'month' && (
         <MonthView
           date={selectedDate}
-          onDateChange={(d) => {
+          onDateChange={setSelectedDate}
+          onDayClick={(d) => {
             setSelectedDate(d)
             setView('day')
           }}
@@ -337,21 +338,22 @@ function WeekView({
                 const key = `${wd}_${slot}`
                 const appts = apptsByDateAndHour[key] || []
                 return (
-                  <div key={key} className="min-h-[40px] border-l border-gray-50 p-0.5">
+                  <div key={key} className="min-h-[56px] border-l border-gray-50 p-0.5">
                     {appts.map((a) => (
                       <button
                         key={a.id}
                         onClick={() => onSelectAppt(a)}
                         className={cn(
-                          'mb-0.5 w-full rounded px-1 py-0.5 text-left text-[9px] font-medium leading-tight truncate',
+                          'mb-0.5 w-full rounded-md px-1.5 py-1.5 text-left transition-all hover:shadow-sm',
                           a.status === 'confirmed' || a.status === 'completed'
-                            ? 'bg-green-100 text-green-800'
+                            ? 'bg-green-100 text-green-800 border-l-2 border-green-500'
                             : a.status === 'cancelled' || a.status === 'no_show'
-                              ? 'bg-red-50 text-red-600'
-                              : 'bg-blue-50 text-blue-700'
+                              ? 'bg-red-50 text-red-600 border-l-2 border-red-400'
+                              : 'bg-blue-50 text-blue-700 border-l-2 border-blue-400'
                         )}
                       >
-                        {a.client_name}
+                        <div className="text-[10px] font-semibold truncate">{a.client_name}</div>
+                        <div className="text-[8px] opacity-70 truncate">{a.service_name}</div>
                       </button>
                     ))}
                   </div>
@@ -369,13 +371,19 @@ function WeekView({
 function MonthView({
   date,
   onDateChange,
+  onDayClick,
 }: {
   date: string
   onDateChange: (d: string) => void
+  onDayClick: (d: string) => void
 }) {
-  const baseDate = new Date(date + 'T12:00:00')
-  const year = baseDate.getFullYear()
-  const month = baseDate.getMonth()
+  const [displayMonth, setDisplayMonth] = useState(() => {
+    const d = new Date(date + 'T12:00:00')
+    return { year: d.getFullYear(), month: d.getMonth() }
+  })
+
+  const year = displayMonth.year
+  const month = displayMonth.month
 
   const firstDay = new Date(year, month, 1)
   const lastDay = new Date(year, month + 1, 0)
@@ -394,9 +402,10 @@ function MonthView({
   }, [appointments])
 
   const goMonth = (offset: number) => {
-    const d = new Date(date + 'T12:00:00')
-    d.setMonth(d.getMonth() + offset)
-    onDateChange(d.toISOString().slice(0, 10))
+    setDisplayMonth((prev) => {
+      const d = new Date(prev.year, prev.month + offset, 1)
+      return { year: d.getFullYear(), month: d.getMonth() }
+    })
   }
 
   // Gerar grid do calendário
@@ -443,7 +452,7 @@ function MonthView({
             return (
               <button
                 key={d}
-                onClick={() => onDateChange(d)}
+                onClick={() => onDayClick(d)}
                 className={cn(
                   'relative flex h-10 flex-col items-center justify-center rounded-lg text-[13px] transition-colors',
                   isToday ? 'bg-brand-900 font-semibold text-white' : 'hover:bg-brand-50'

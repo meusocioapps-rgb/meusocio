@@ -150,10 +150,11 @@ export default function ExpensesPage() {
 
   const monthTabs = useMemo(() => {
     const tabs = []
-    for (let i = 0; i < 3; i++) {
-      let m = now.getMonth() - i
+    for (let i = -2; i <= 2; i++) {
+      let m = now.getMonth() + i
       let y = now.getFullYear()
       if (m < 0) { m += 12; y -= 1 }
+      if (m > 11) { m -= 12; y += 1 }
       tabs.push({ year: y, month: m, label: getMonthLabel(y, m) })
     }
     return tabs

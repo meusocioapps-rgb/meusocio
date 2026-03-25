@@ -8,7 +8,6 @@ import {
   useNotifications,
 } from '@/hooks/use-dashboard'
 import { useTodayAppointments, useConfirmAppointment, useAppointmentsByRange } from '@/hooks/use-appointments'
-import { useClients } from '@/hooks/use-clients'
 import { useSettings } from '@/hooks/use-profile'
 import { useFinancialSummary } from '@/hooks/use-finances'
 import { getCurrentMonth } from '@/lib/utils'
@@ -26,9 +25,7 @@ import {
   Calendar,
   TrendingUp,
   Target,
-  UserCheck,
-  UserMinus,
-  ArrowRight,
+  Plus,
 } from 'lucide-react'
 import { AppointmentModal } from '@/components/AppointmentModal'
 import { PostAppointmentModal } from '@/components/PostAppointmentModal'
@@ -42,7 +39,6 @@ export default function DashboardPage() {
   const { data: notifications } = useNotifications()
   const { data: summary } = useFinancialSummary()
   const { data: settings } = useSettings()
-  const { data: clients } = useClients()
   const confirmMutation = useConfirmAppointment()
 
   // Calcular "a receber" dos agendamentos pendentes do mês
@@ -88,8 +84,7 @@ export default function DashboardPage() {
     })
   }
 
-  const recurrentCount = clients?.filter((c) => c.is_recurrent).length ?? 0
-  const reactivateCount = clients?.filter((c) => c.needs_reactivation).length ?? 0
+  // removed recurrent/reactivate counts
 
   if (loadingStats) {
     return (
@@ -359,32 +354,15 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Painel de clientes */}
-      <div className="mt-4 grid gap-3 md:grid-cols-2">
-        <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-100">
-            <UserCheck size={18} className="text-green-600" />
-          </div>
-          <div className="flex-1">
-            <div className="text-[13px] font-semibold">{recurrentCount}</div>
-            <div className="text-[10px] text-gray-400">Clientes recorrentes</div>
-          </div>
-          <Link href="/clients" className="text-gray-300">
-            <ArrowRight size={16} />
-          </Link>
-        </div>
-        <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-100">
-            <UserMinus size={18} className="text-red-500" />
-          </div>
-          <div className="flex-1">
-            <div className="text-[13px] font-semibold">{reactivateCount}</div>
-            <div className="text-[10px] text-gray-400">Para reativar</div>
-          </div>
-          <Link href="/clients" className="text-gray-300">
-            <ArrowRight size={16} />
-          </Link>
-        </div>
+      {/* Botão novo atendimento */}
+      <div className="mt-4">
+        <Link
+          href="/schedule/new"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-900 px-4 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-brand-800"
+        >
+          <Plus size={18} />
+          Novo Atendimento
+        </Link>
       </div>
 
       {/* Modal de Atendimento */}
