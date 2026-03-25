@@ -8,7 +8,7 @@ import { useClients, useUpdateClient, useDeleteClient } from '@/hooks/use-client
 import { formatCurrency } from '@/lib/utils'
 import type { Settings } from '@/lib/types'
 import { toast } from '@/components/Toast'
-import { Plus, X, Search, Pencil, Trash2, Check, Lock, Eye, EyeOff } from 'lucide-react'
+import { Plus, X, Search, Pencil, Trash2, Check, Lock, Eye, EyeOff, ToggleLeft, ToggleRight } from 'lucide-react'
 
 const supabase = createClient()
 
@@ -45,18 +45,100 @@ function useUpdateSettings() {
   })
 }
 
+type CustomField = {
+  id: string
+  user_id: string
+  name: string
+  description: string | null
+  field_type: 'text' | 'number' | 'date' | 'select' | 'boolean'
+  is_active: boolean
+  created_at: string
+}
+
+const FIELD_TYPE_LABELS: Record<CustomField['field_type'], string> = {
+  text: 'Texto',
+  number: 'Numero',
+  date: 'Data',
+  select: 'Selecao',
+  boolean: 'Sim/Nao',
+}
+
+function useCustomFields() {
+  return useQuery({
+    queryKey: ['custom_fields'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('custom_fields')
+        .select('*')
+        .order('created_at', { ascending: true })
+      if (error) throw error
+      return data as CustomField[]
+    },
+  })
+}
+
+function useCreateCustomField() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (payload: { name: string; field_type: CustomField['field_type']; description?: string }) => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+      const { error } = await supabase.from('custom_fields').insert({
+        user_id: user.id,
+        name: payload.name,
+        field_type: payload.field_type,
+        description: payload.description || null,
+        is_active: true,
+      })
+      if (error) throw error
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['custom_fields'] }),
+  })
+}
+
+function useToggleCustomField() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
+      const { error } = await supabase
+        .from('custom_fields')
+        .update({ is_active })
+        .eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['custom_fields'] }),
+  })
+}
+
+function useDeleteCustomField() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('custom_fields').delete().eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['custom_fields'] }),
+  })
+}
+
 export default function SettingsPage() {
   const { data: settings, isLoading } = useSettings()
   const { data: services } = useServices()
   const { data: clients } = useClients()
+  const { data: customFields } = useCustomFields()
   const updateSettings = useUpdateSettings()
   const createService = useCreateService()
   const updateService = useUpdateService()
   const deleteService = useDeleteService()
   const updateClient = useUpdateClient()
   const deleteClient = useDeleteClient()
+  const createCustomField = useCreateCustomField()
+  const toggleCustomField = useToggleCustomField()
+  const deleteCustomField = useDeleteCustomField()
 
   const [showServiceModal, setShowServiceModal] = useState(false)
+  const [showCustomFieldModal, setShowCustomFieldModal] = useState(false)
+  const [deletingCustomFieldId, setDeletingCustomFieldId] = useState<string | null>(null)
   const [reactivationDays, setReactivationDays] = useState(30)
   const [minVisits, setMinVisits] = useState(3)
   const [monthlyGoal, setMonthlyGoal] = useState(0)
@@ -363,6 +445,63 @@ export default function SettingsPage() {
         </button>
       </section>
 
+      {/* Campos Personalizados */}
+      <section className="mb-6">
+        <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-gray-400">
+          Campos Personalizados
+        </h3>
+        <p className="mb-3 text-[11px] text-gray-400">
+          Campos extras para registrar informacoes adicionais nos clientes.
+        </p>
+        <div className="space-y-2">
+          {customFields?.length === 0 && (
+            <p className="py-3 text-center text-[12px] text-gray-400">Nenhum campo personalizado criado.</p>
+          )}
+          {customFields?.map((field) => (
+            <div key={field.id} className="rounded-xl border border-gray-200 bg-white px-4 py-3">
+              <div className="flex items-center gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="text-[13px] font-medium truncate">{field.name}</div>
+                  <div className="text-[11px] text-gray-400">
+                    {FIELD_TYPE_LABELS[field.field_type]}
+                    {field.description && ` · ${field.description}`}
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <button
+                    onClick={() => {
+                      toggleCustomField.mutate({ id: field.id, is_active: !field.is_active })
+                    }}
+                    title={field.is_active ? 'Desativar' : 'Ativar'}
+                    className={`flex h-7 w-7 items-center justify-center rounded-lg border transition-colors ${
+                      field.is_active
+                        ? 'border-brand-500 text-brand-900'
+                        : 'border-gray-200 text-gray-300'
+                    }`}
+                  >
+                    {field.is_active ? <ToggleRight size={15} /> : <ToggleLeft size={15} />}
+                  </button>
+                  <button
+                    onClick={() => setDeletingCustomFieldId(field.id)}
+                    className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:border-red-400 hover:text-red-500"
+                    title="Excluir"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <button
+          onClick={() => setShowCustomFieldModal(true)}
+          className="mt-2 flex items-center gap-1 rounded-lg bg-brand-900 px-3 py-1.5 text-[11px] font-medium text-white"
+        >
+          <Plus size={12} />
+          Adicionar campo
+        </button>
+      </section>
+
       {/* Meta mensal */}
       <section className="mb-6">
         <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-gray-400">
@@ -579,6 +718,123 @@ export default function SettingsPage() {
                 className="flex-1 rounded-lg bg-red-600 py-2 text-xs font-medium text-white disabled:opacity-50"
               >
                 {deleteService.isPending ? 'Excluindo...' : 'Excluir'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Novo Campo Personalizado */}
+      {showCustomFieldModal && (
+        <div
+          className="fixed inset-0 z-[200] flex items-end justify-center bg-black/40 p-0 md:items-center md:p-4"
+          onClick={(e) => e.target === e.currentTarget && setShowCustomFieldModal(false)}
+        >
+          <div className="w-full max-w-md rounded-t-2xl bg-white md:rounded-2xl">
+            <div className="flex items-center justify-between border-b px-5 py-4">
+              <h3 className="text-[15px] font-semibold">Novo Campo Personalizado</h3>
+              <button onClick={() => setShowCustomFieldModal(false)} className="text-gray-400">
+                <X size={22} />
+              </button>
+            </div>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault()
+                const fd = new FormData(e.currentTarget)
+                await createCustomField.mutateAsync({
+                  name: fd.get('name') as string,
+                  field_type: fd.get('field_type') as CustomField['field_type'],
+                  description: (fd.get('description') as string) || undefined,
+                })
+                setShowCustomFieldModal(false)
+                toast('Campo personalizado adicionado!')
+              }}
+              className="p-5"
+            >
+              <div className="mb-3">
+                <label className="mb-1 block text-[10px] font-semibold uppercase text-gray-500">Nome *</label>
+                <input
+                  name="name"
+                  type="text"
+                  placeholder="Ex: Tipo de pele"
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-[13px] outline-none"
+                  required
+                />
+              </div>
+              <div className="mb-3">
+                <label className="mb-1 block text-[10px] font-semibold uppercase text-gray-500">Tipo *</label>
+                <select
+                  name="field_type"
+                  defaultValue="text"
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-[13px] outline-none bg-white"
+                  required
+                >
+                  <option value="text">Texto</option>
+                  <option value="number">Numero</option>
+                  <option value="date">Data</option>
+                  <option value="select">Selecao</option>
+                  <option value="boolean">Sim/Nao</option>
+                </select>
+              </div>
+              <div className="mb-4">
+                <label className="mb-1 block text-[10px] font-semibold uppercase text-gray-500">Descricao (opcional)</label>
+                <input
+                  name="description"
+                  type="text"
+                  placeholder="Ex: Tipo de pele do cliente"
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-[13px] outline-none"
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCustomFieldModal(false)}
+                  className="flex-1 rounded-lg border border-brand-900 py-2 text-xs font-medium text-brand-900"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={createCustomField.isPending}
+                  className="flex-1 rounded-lg bg-brand-900 py-2 text-xs font-medium text-white disabled:opacity-50"
+                >
+                  {createCustomField.isPending ? 'Salvando...' : 'Salvar'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Confirmar Exclusao de Campo Personalizado */}
+      {deletingCustomFieldId && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 p-4"
+          onClick={(e) => e.target === e.currentTarget && setDeletingCustomFieldId(null)}
+        >
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center">
+            <div className="mb-3 text-3xl">&#9888;&#65039;</div>
+            <h3 className="mb-2 text-[15px] font-semibold">Excluir campo?</h3>
+            <p className="mb-4 text-[12px] text-gray-500">
+              Esta acao nao pode ser desfeita.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setDeletingCustomFieldId(null)}
+                className="flex-1 rounded-lg border border-gray-300 py-2 text-xs font-medium text-gray-600"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={async () => {
+                  await deleteCustomField.mutateAsync(deletingCustomFieldId)
+                  setDeletingCustomFieldId(null)
+                  toast('Campo excluido!')
+                }}
+                disabled={deleteCustomField.isPending}
+                className="flex-1 rounded-lg bg-red-600 py-2 text-xs font-medium text-white disabled:opacity-50"
+              >
+                {deleteCustomField.isPending ? 'Excluindo...' : 'Excluir'}
               </button>
             </div>
           </div>

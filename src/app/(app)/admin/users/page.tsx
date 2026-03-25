@@ -186,7 +186,7 @@ export default function AdminPage() {
   // Notification modal
   const [notifTarget, setNotifTarget] = useState<Profile | null>(null)
   const [notifMessage, setNotifMessage] = useState('')
-  const [notifType, setNotifType] = useState<'push' | 'email' | 'whatsapp'>('push')
+  const [notifType, setNotifType] = useState<'email' | 'whatsapp'>('email')
 
   // Confirm dialog
   const [confirmAction, setConfirmAction] = useState<{ type: 'suspend' | 'delete'; user: Profile } | null>(null)
@@ -1021,8 +1021,8 @@ function NotificationModal({
 }: {
   target: Profile
   message: string
-  type: 'push' | 'email' | 'whatsapp'
-  onTypeChange: (t: 'push' | 'email' | 'whatsapp') => void
+  type: 'email' | 'whatsapp'
+  onTypeChange: (t: 'email' | 'whatsapp') => void
   onMessageChange: (m: string) => void
   onClose: () => void
   onSend: () => void
@@ -1041,7 +1041,7 @@ function NotificationModal({
           Para: <span className="font-medium text-gray-600">{target.full_name || target.business_name || 'Usuario'}</span>
         </p>
         <div className="mt-3 flex gap-2">
-          {(['push', 'email', 'whatsapp'] as const).map((t) => (
+          {(['email', 'whatsapp'] as const).map((t) => (
             <button
               key={t}
               onClick={() => onTypeChange(t)}
@@ -1049,7 +1049,7 @@ function NotificationModal({
                 type === t ? 'border-brand-900 bg-brand-900 text-white' : 'border-gray-200 text-gray-500 hover:bg-gray-50'
               }`}
             >
-              {t === 'push' ? 'Push' : t === 'email' ? 'Email' : 'WhatsApp'}
+              {t === 'email' ? 'Email' : 'WhatsApp'}
             </button>
           ))}
         </div>

@@ -4,10 +4,12 @@ import { useState, useMemo } from 'react'
 import {
   useFinancialEntries,
   useFixedExpenses,
+  useFixedCategoryEntries,
   useCreateExpense,
   useUpdateEntryStatus,
 } from '@/hooks/use-finances'
 import { useAppointmentsByRange } from '@/hooks/use-appointments'
+import type { FinancialEntry } from '@/lib/types'
 import { formatCurrency, formatDate, cn } from '@/lib/utils'
 import { Plus, X, Car, UtensilsCrossed, Check, ChevronLeft, ChevronRight } from 'lucide-react'
 import { toast } from '@/components/Toast'
@@ -39,8 +41,13 @@ export default function ExpensesPage() {
 
   const { data: entries, isLoading } = useFinancialEntries(monthKey)
   const { data: fixedExpenses } = useFixedExpenses()
+  const { data: fixedCategoryEntries } = useFixedCategoryEntries()
   const createExpense = useCreateExpense()
   const updateStatus = useUpdateEntryStatus()
+
+  const isFutureMonth =
+    selectedYear > now.getFullYear() ||
+    (selectedYear === now.getFullYear() && selectedMonth > now.getMonth())
 
   // Daily costs state
   const [transportEnabled, setTransportEnabled] = useState(true)
@@ -109,11 +116,42 @@ export default function ExpensesPage() {
     return descriptions
   }, [paidExpenses])
 
+  // For future months, derive projected fixed expenses from financial_entries with expense_category='fixed'
+  // (entries added manually as "Fixa" type in previous months)
+  const projectedFromEntries = useMemo(() => {
+    if (!isFutureMonth || !fixedCategoryEntries) return []
+    // Deduplicate by description, keeping the most recent entry for each
+    const seen = new Map<string, FinancialEntry>()
+    for (const e of fixedCategoryEntries) {
+      if (!seen.has(e.description)) {
+        seen.set(e.description, e)
+      }
+    }
+    // Only include ones not already covered by the fixed_expenses table
+    const fixedExpenseDescs = new Set((fixedExpenses ?? []).map((fe) => fe.description))
+    return Array.from(seen.values()).filter((e) => !fixedExpenseDescs.has(e.description))
+  }, [isFutureMonth, fixedCategoryEntries, fixedExpenses])
+
   // Unpaid fixed expenses for the month (not yet recorded as paid entries)
   const unpaidFixedExpenses = useMemo(() => {
-    if (!fixedExpenses) return []
-    return fixedExpenses.filter((fe) => !paidFixedDescriptions.has(fe.description))
-  }, [fixedExpenses, paidFixedDescriptions])
+    const fromTable = (fixedExpenses ?? []).filter((fe) => !paidFixedDescriptions.has(fe.description))
+    if (!isFutureMonth) return fromTable
+    // For future months: also project fixed-category entries from previous months
+    const projected = projectedFromEntries
+      .filter((e) => !paidFixedDescriptions.has(e.description))
+      .map((e) => ({
+        id: `proj-${e.id}`,
+        user_id: e.user_id,
+        description: e.description,
+        amount: e.amount,
+        due_day: null as number | null,
+        category: 'fixed',
+        notify: false,
+        is_active: true,
+        created_at: e.created_at,
+      }))
+    return [...fromTable, ...projected]
+  }, [fixedExpenses, paidFixedDescriptions, isFutureMonth, projectedFromEntries])
 
   // KPI calculations
   const totalVariableExpenses = allExpenseEntries

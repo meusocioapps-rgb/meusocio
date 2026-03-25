@@ -15,7 +15,7 @@ const titles: Record<string, string> = {
   '/schedule/new': 'Novo Atendimento',
   '/finances': 'Receitas',
   '/finances/expenses': 'Despesas',
-  '/finances/pending': 'A Receber / Pagar',
+  '/finances/pending': 'Projeção',
   '/reports': 'Relatórios',
   '/export': 'Exportar Dados',
   '/settings': 'Configurações',

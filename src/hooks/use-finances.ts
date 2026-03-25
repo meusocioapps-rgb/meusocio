@@ -135,6 +135,23 @@ export function useUpdateEntryStatus() {
   })
 }
 
+export function useFixedCategoryEntries() {
+  return useQuery({
+    queryKey: ['finances', 'fixed-category-entries'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('financial_entries')
+        .select('*')
+        .eq('type', 'expense')
+        .eq('expense_category', 'fixed')
+        .order('entry_date', { ascending: false })
+      if (error) throw error
+      return data as FinancialEntry[]
+    },
+    staleTime: 60_000,
+  })
+}
+
 export function useFinancialSummary() {
   return useQuery({
     queryKey: ['finances', 'summary'],

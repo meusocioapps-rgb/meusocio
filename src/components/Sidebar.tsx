@@ -41,7 +41,7 @@ const baseSections = [
     items: [
       { href: '/finances', label: 'Receitas', icon: DollarSign },
       { href: '/finances/expenses', label: 'Despesas', icon: TrendingDown },
-      { href: '/finances/pending', label: 'A Receber/Pagar', icon: CreditCard },
+      { href: '/finances/pending', label: 'Projeção', icon: CreditCard },
       { href: '/reports', label: 'Relatorio', icon: FileText },
     ],
   },

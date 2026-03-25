@@ -43,8 +43,11 @@ export default function DashboardPage() {
 
   // Calcular "a receber" dos agendamentos pendentes do mês
   const now = new Date()
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10)
-  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10)
+  const _year = now.getFullYear()
+  const _month = String(now.getMonth() + 1).padStart(2, '0')
+  const _lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
+  const monthStart = `${_year}-${_month}-01`
+  const monthEnd = `${_year}-${_month}-${String(_lastDay).padStart(2, '0')}`
   const { data: monthAppts } = useAppointmentsByRange(monthStart, monthEnd)
 
   const pendingApptsValue = (monthAppts ?? [])
@@ -246,6 +249,17 @@ export default function DashboardPage() {
         />
       </div>
 
+      {/* Botão novo atendimento */}
+      <div className="mb-4">
+        <Link
+          href="/schedule/new"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-900 px-4 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-brand-800"
+        >
+          <Plus size={18} />
+          Novo Atendimento
+        </Link>
+      </div>
+
       {/* Meta mensal */}
       <div className="mb-4 rounded-xl border border-gray-200 bg-white p-4">
         <div className="flex items-center justify-between">
@@ -352,17 +366,6 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
-      </div>
-
-      {/* Botão novo atendimento */}
-      <div className="mt-4">
-        <Link
-          href="/schedule/new"
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-900 px-4 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-brand-800"
-        >
-          <Plus size={18} />
-          Novo Atendimento
-        </Link>
       </div>
 
       {/* Modal de Atendimento */}

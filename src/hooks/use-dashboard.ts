@@ -16,12 +16,13 @@ export function useDashboardStats() {
 
       // Fallback: calculate from tables directly
       const now = new Date()
-      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10)
+      const todayLocal = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+      const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
 
       const [incomeRes, expenseRes, todayRes, clientsRes] = await Promise.all([
         supabase.from('appointments').select('final_value, upsell_value, estimated_value').eq('status', 'completed').eq('is_free_return', false).gte('scheduled_date', monthStart),
         supabase.from('financial_entries').select('amount').eq('type', 'expense').gte('entry_date', monthStart),
-        supabase.from('appointments').select('id', { count: 'exact', head: true }).eq('scheduled_date', now.toISOString().slice(0, 10)).in('status', ['scheduled', 'confirmed']),
+        supabase.from('appointments').select('id', { count: 'exact', head: true }).eq('scheduled_date', todayLocal).in('status', ['scheduled', 'confirmed', 'completed']),
         supabase.from('appointments').select('client_id').eq('status', 'completed'),
       ])
 
@@ -52,7 +53,8 @@ export function useNextAppointment() {
       if (!error && data && data.id) return data as NextAppointment
 
       // Fallback: direct query
-      const today = new Date().toISOString().slice(0, 10)
+      const _now = new Date()
+      const today = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, '0')}-${String(_now.getDate()).padStart(2, '0')}`
       const { data: appts } = await supabase
         .from('appointments_with_client')
         .select('*')
