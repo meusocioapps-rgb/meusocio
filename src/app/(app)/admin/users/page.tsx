@@ -23,6 +23,10 @@ import {
   Briefcase,
   Phone,
   CheckCircle,
+  CreditCard,
+  Settings,
+  Palette,
+  Send,
 } from 'lucide-react'
 
 // ---------------------------------------------------------------------------
@@ -88,6 +92,21 @@ function useAdminFeedbacks() {
   })
 }
 
+interface Subscription {
+  user_id: string
+  plan: string
+  status: string
+  trial_ends_at: string | null
+  paid_until: string | null
+  price: number | null
+  updated_at: string | null
+}
+
+interface UserConfig {
+  business_type: string
+  custom_labels: Record<string, string>
+}
+
 function useUserDetails(userId: string | null) {
   const supabase = createClient()
   return useQuery({
@@ -96,11 +115,13 @@ function useUserDetails(userId: string | null) {
     queryFn: async () => {
       if (!userId) return null
 
-      const [servicesRes, clientsRes, appointmentsRes, financesRes] = await Promise.all([
+      const [servicesRes, clientsRes, appointmentsRes, financesRes, subscriptionRes, settingsRes] = await Promise.all([
         supabase.from('services').select('*').eq('user_id', userId).order('name'),
         supabase.from('clients').select('*').eq('user_id', userId).order('name'),
         supabase.from('appointments').select('*').eq('user_id', userId).order('scheduled_date', { ascending: false }).limit(20),
         supabase.from('financial_entries').select('*').eq('user_id', userId).order('entry_date', { ascending: false }).limit(20),
+        supabase.from('subscriptions').select('*').eq('user_id', userId).single(),
+        supabase.from('settings').select('*').eq('user_id', userId).single(),
       ])
 
       return {
@@ -108,6 +129,8 @@ function useUserDetails(userId: string | null) {
         clients: clientsRes.data ?? [],
         appointments: appointmentsRes.data ?? [],
         finances: financesRes.data ?? [],
+        subscription: subscriptionRes.data as Subscription | null,
+        settings: settingsRes.data as Record<string, unknown> | null,
       }
     },
   })
@@ -248,6 +271,62 @@ export default function AdminPage() {
       toast('Perfil do usuario removido')
     },
     onError: () => toast('Erro ao remover usuario'),
+  })
+
+  // Subscription management
+  const updateSubscription = useMutation({
+    mutationFn: async (data: { userId: string; updates: Record<string, unknown> }) => {
+      const { error } = await supabase
+        .from('subscriptions')
+        .update({ ...data.updates, updated_at: new Date().toISOString() })
+        .eq('user_id', data.userId)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin'] })
+      toast('Assinatura atualizada!')
+    },
+    onError: () => toast('Erro ao atualizar assinatura'),
+  })
+
+  // Update user settings/config
+  const updateUserSettings = useMutation({
+    mutationFn: async (data: { userId: string; updates: Record<string, unknown> }) => {
+      const { error } = await supabase
+        .from('settings')
+        .update(data.updates)
+        .eq('user_id', data.userId)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin'] })
+      toast('Configuracoes atualizadas!')
+    },
+    onError: () => toast('Erro ao salvar configuracoes'),
+  })
+
+  // Send notification via API
+  const sendNotification = useMutation({
+    mutationFn: async (data: { type: string; to_email?: string; to_phone?: string; to_name: string; message: string; subject?: string }) => {
+      const res = await fetch('/api/admin/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Erro desconhecido' }))
+        throw new Error(err.error || 'Erro ao enviar')
+      }
+      return res.json()
+    },
+    onSuccess: (data) => {
+      if (data.whatsapp_url) {
+        window.open(data.whatsapp_url, '_blank')
+      }
+      setNotifTarget(null)
+      toast('Notificacao enviada!')
+    },
+    onError: (err) => toast(`Erro: ${err instanceof Error ? err.message : 'falha no envio'}`),
   })
 
   // Mark feedback as read
@@ -448,6 +527,49 @@ export default function AdminPage() {
           )}
         </div>
 
+        {/* Subscription Management */}
+        {userDetails?.subscription && (
+          <SubscriptionPanel
+            subscription={userDetails.subscription}
+            onExtendTrial={(days) => updateSubscription.mutate({
+              userId: selectedUser.id,
+              updates: {
+                status: 'trial',
+                trial_ends_at: new Date(Date.now() + days * 86400000).toISOString(),
+              },
+            })}
+            onActivate={() => updateSubscription.mutate({
+              userId: selectedUser.id,
+              updates: {
+                status: 'active',
+                plan: 'pro',
+                paid_until: new Date(Date.now() + 30 * 86400000).toISOString(),
+              },
+            })}
+            onCancel={() => updateSubscription.mutate({
+              userId: selectedUser.id,
+              updates: { status: 'cancelled' },
+            })}
+            onBlock={() => updateSubscription.mutate({
+              userId: selectedUser.id,
+              updates: { status: 'blocked' },
+            })}
+            onSetFree={() => updateSubscription.mutate({
+              userId: selectedUser.id,
+              updates: { status: 'active', plan: 'free', price: 0 },
+            })}
+            loading={updateSubscription.isPending}
+          />
+        )}
+
+        {/* User Personalization */}
+        <PersonalizationPanel
+          userId={selectedUser.id}
+          settings={userDetails?.settings ?? null}
+          onSave={(updates) => updateUserSettings.mutate({ userId: selectedUser.id, updates })}
+          loading={updateUserSettings.isPending}
+        />
+
         {/* Details loading */}
         {detailsLoading ? (
           <div className="flex justify-center py-10">
@@ -568,9 +690,16 @@ export default function AdminPage() {
             onMessageChange={setNotifMessage}
             onClose={() => setNotifTarget(null)}
             onSend={() => {
-              setNotifTarget(null)
-              toast('Funcionalidade em desenvolvimento')
+              sendNotification.mutate({
+                type: notifType,
+                to_email: notifTarget?.email ?? undefined,
+                to_phone: notifTarget?.phone ?? undefined,
+                to_name: notifTarget?.full_name || notifTarget?.business_name || 'Usuario',
+                message: notifMessage,
+                subject: 'Meu Socio - Mensagem',
+              })
             }}
+            loading={sendNotification.isPending}
           />
         )}
 
@@ -861,9 +990,16 @@ export default function AdminPage() {
           onMessageChange={setNotifMessage}
           onClose={() => setNotifTarget(null)}
           onSend={() => {
-            setNotifTarget(null)
-            toast('Funcionalidade em desenvolvimento')
+            sendNotification.mutate({
+              type: notifType,
+              to_email: notifTarget?.email ?? undefined,
+              to_phone: notifTarget?.phone ?? undefined,
+              to_name: notifTarget?.full_name || notifTarget?.business_name || 'Usuario',
+              message: notifMessage,
+              subject: 'Meu Socio - Mensagem',
+            })
           }}
+          loading={sendNotification.isPending}
         />
       )}
     </div>
@@ -881,6 +1017,7 @@ function NotificationModal({
   onMessageChange,
   onClose,
   onSend,
+  loading,
 }: {
   target: Profile
   message: string
@@ -889,6 +1026,7 @@ function NotificationModal({
   onMessageChange: (m: string) => void
   onClose: () => void
   onSend: () => void
+  loading?: boolean
 }) {
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 px-4">
@@ -924,9 +1062,265 @@ function NotificationModal({
         />
         <button
           onClick={onSend}
-          className="mt-3 w-full rounded-lg bg-brand-900 py-2.5 text-xs font-semibold text-white hover:bg-brand-800"
+          disabled={loading || !message.trim()}
+          className="mt-3 w-full rounded-lg bg-brand-900 py-2.5 text-xs font-semibold text-white hover:bg-brand-800 disabled:opacity-50"
         >
-          Enviar
+          {loading ? 'Enviando...' : 'Enviar'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Subscription Panel
+// ---------------------------------------------------------------------------
+function SubscriptionPanel({
+  subscription,
+  onExtendTrial,
+  onActivate,
+  onCancel,
+  onBlock,
+  onSetFree,
+  loading,
+}: {
+  subscription: Subscription
+  onExtendTrial: (days: number) => void
+  onActivate: () => void
+  onCancel: () => void
+  onBlock: () => void
+  onSetFree: () => void
+  loading: boolean
+}) {
+  const [trialDays, setTrialDays] = useState(7)
+
+  const statusMap: Record<string, { label: string; color: string }> = {
+    trial: { label: 'Trial', color: 'bg-yellow-100 text-yellow-700' },
+    active: { label: 'Ativo', color: 'bg-green-100 text-green-700' },
+    cancelled: { label: 'Cancelado', color: 'bg-gray-100 text-gray-500' },
+    blocked: { label: 'Bloqueado', color: 'bg-red-100 text-red-700' },
+    past_due: { label: 'Pagamento Pendente', color: 'bg-orange-100 text-orange-700' },
+  }
+
+  const s = statusMap[subscription.status] ?? statusMap.trial
+
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <CreditCard size={14} className="text-brand-900" />
+        <h4 className="text-[12px] font-bold uppercase text-gray-400">Assinatura</h4>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3 mb-3">
+        <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${s.color}`}>
+          {s.label}
+        </span>
+        <span className="text-[11px] text-gray-400">
+          Plano: <span className="font-medium text-gray-600">{subscription.plan ?? 'trial'}</span>
+        </span>
+        {subscription.price !== null && subscription.price > 0 && (
+          <span className="text-[11px] text-gray-400">
+            R$ {Number(subscription.price).toFixed(2)}/mes
+          </span>
+        )}
+      </div>
+
+      {subscription.trial_ends_at && (
+        <p className="text-[10px] text-gray-400 mb-2">
+          Trial ate: {new Date(subscription.trial_ends_at).toLocaleDateString('pt-BR')}
+          {new Date(subscription.trial_ends_at) < new Date() && (
+            <span className="ml-1 text-red-500 font-semibold">(Expirado)</span>
+          )}
+        </p>
+      )}
+      {subscription.paid_until && (
+        <p className="text-[10px] text-gray-400 mb-2">
+          Pago ate: {new Date(subscription.paid_until).toLocaleDateString('pt-BR')}
+        </p>
+      )}
+
+      <div className="border-t border-gray-100 pt-3 mt-2">
+        <p className="text-[10px] font-semibold uppercase text-gray-400 mb-2">Acoes</p>
+        <div className="flex flex-wrap gap-2">
+          {/* Extend trial */}
+          <div className="flex items-center gap-1">
+            <input
+              type="number"
+              value={trialDays}
+              onChange={(e) => setTrialDays(Number(e.target.value))}
+              min={1}
+              max={90}
+              className="w-12 rounded border border-gray-200 px-1 py-1 text-center text-[11px] outline-none"
+            />
+            <button
+              onClick={() => onExtendTrial(trialDays)}
+              disabled={loading}
+              className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-[10px] font-medium text-blue-700 hover:bg-blue-100 disabled:opacity-50"
+            >
+              Estender Trial ({trialDays}d)
+            </button>
+          </div>
+
+          {subscription.status !== 'active' && (
+            <button
+              onClick={onActivate}
+              disabled={loading}
+              className="rounded-lg border border-green-200 bg-green-50 px-3 py-1.5 text-[10px] font-medium text-green-700 hover:bg-green-100 disabled:opacity-50"
+            >
+              Ativar Assinatura
+            </button>
+          )}
+
+          <button
+            onClick={onSetFree}
+            disabled={loading}
+            className="rounded-lg border border-purple-200 bg-purple-50 px-3 py-1.5 text-[10px] font-medium text-purple-700 hover:bg-purple-100 disabled:opacity-50"
+          >
+            Liberar Gratis
+          </button>
+
+          {subscription.status !== 'cancelled' && subscription.status !== 'blocked' && (
+            <button
+              onClick={onCancel}
+              disabled={loading}
+              className="rounded-lg border border-gray-200 px-3 py-1.5 text-[10px] font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+            >
+              Cancelar
+            </button>
+          )}
+
+          <button
+            onClick={onBlock}
+            disabled={loading}
+            className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-[10px] font-medium text-red-600 hover:bg-red-100 disabled:opacity-50"
+          >
+            Bloquear Acesso
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Personalization Panel
+// ---------------------------------------------------------------------------
+function PersonalizationPanel({
+  userId,
+  settings,
+  onSave,
+  loading,
+}: {
+  userId: string
+  settings: Record<string, unknown> | null
+  onSave: (updates: Record<string, unknown>) => void
+  loading: boolean
+}) {
+  const [businessType, setBusinessType] = useState(
+    (settings?.business_type as string) ?? 'agendamento'
+  )
+  const [labelAgendamento, setLabelAgendamento] = useState(
+    (settings?.label_agendamento as string) ?? 'Agendamento'
+  )
+  const [labelCliente, setLabelCliente] = useState(
+    (settings?.label_cliente as string) ?? 'Cliente'
+  )
+  const [labelServico, setLabelServico] = useState(
+    (settings?.label_servico as string) ?? 'Servico'
+  )
+  const [notes, setNotes] = useState(
+    (settings?.admin_notes as string) ?? ''
+  )
+
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <Palette size={14} className="text-brand-900" />
+        <h4 className="text-[12px] font-bold uppercase text-gray-400">Personalizacao do Usuario</h4>
+      </div>
+
+      <div className="space-y-3">
+        <div>
+          <label className="mb-1 block text-[10px] font-semibold uppercase text-gray-400">
+            Tipo de Negocio
+          </label>
+          <select
+            value={businessType}
+            onChange={(e) => setBusinessType(e.target.value)}
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs outline-none"
+          >
+            <option value="agendamento">Agendamento (servicos presenciais)</option>
+            <option value="entrega">Prazo de Entrega (producao/delivery)</option>
+            <option value="consultoria">Consultoria (sessoes online)</option>
+            <option value="venda">Venda direta (produtos)</option>
+            <option value="personalizado">Personalizado</option>
+          </select>
+        </div>
+
+        {businessType === 'personalizado' && (
+          <div className="grid grid-cols-3 gap-2">
+            <div>
+              <label className="mb-1 block text-[10px] font-semibold text-gray-400">
+                Label &quot;Agendamento&quot;
+              </label>
+              <input
+                value={labelAgendamento}
+                onChange={(e) => setLabelAgendamento(e.target.value)}
+                placeholder="Ex: Prazo de entrega"
+                className="w-full rounded-lg border border-gray-200 px-2 py-1.5 text-[11px] outline-none"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-[10px] font-semibold text-gray-400">
+                Label &quot;Cliente&quot;
+              </label>
+              <input
+                value={labelCliente}
+                onChange={(e) => setLabelCliente(e.target.value)}
+                placeholder="Ex: Paciente"
+                className="w-full rounded-lg border border-gray-200 px-2 py-1.5 text-[11px] outline-none"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-[10px] font-semibold text-gray-400">
+                Label &quot;Servico&quot;
+              </label>
+              <input
+                value={labelServico}
+                onChange={(e) => setLabelServico(e.target.value)}
+                placeholder="Ex: Produto"
+                className="w-full rounded-lg border border-gray-200 px-2 py-1.5 text-[11px] outline-none"
+              />
+            </div>
+          </div>
+        )}
+
+        <div>
+          <label className="mb-1 block text-[10px] font-semibold uppercase text-gray-400">
+            Notas do Admin (interno)
+          </label>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Observacoes sobre este usuario..."
+            rows={2}
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs outline-none"
+          />
+        </div>
+
+        <button
+          onClick={() => onSave({
+            business_type: businessType,
+            label_agendamento: labelAgendamento,
+            label_cliente: labelCliente,
+            label_servico: labelServico,
+            admin_notes: notes,
+          })}
+          disabled={loading}
+          className="flex items-center gap-1.5 rounded-lg bg-brand-900 px-4 py-2 text-xs font-medium text-white disabled:opacity-50"
+        >
+          <Save size={13} />
+          {loading ? 'Salvando...' : 'Salvar Configuracoes'}
         </button>
       </div>
     </div>
