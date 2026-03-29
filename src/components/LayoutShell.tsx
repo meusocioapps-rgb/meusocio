@@ -11,7 +11,7 @@ import { MobileDrawer } from '@/components/MobileDrawer'
 import { useProfile } from '@/hooks/use-profile'
 import { createClient } from '@/lib/supabase/client'
 
-const ADMIN_EMAIL = 'meusocio.apps@gmail.com'
+const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'meusocio.apps@gmail.com'
 
 function useAuthEmail() {
   return useQuery({

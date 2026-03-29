@@ -95,8 +95,12 @@ function LoginContent() {
 
     // --- CRIAR CONTA ---
     if (mode === 'signup') {
-      if (password.length < 6) {
-        setError('A senha deve ter pelo menos 6 caracteres.')
+      if (password.length < 8) {
+        setError('A senha deve ter pelo menos 8 caracteres.')
+        return
+      }
+      if (!/\d/.test(password)) {
+        setError('A senha deve conter pelo menos um numero.')
         return
       }
       if (password !== confirmPassword) {
@@ -120,7 +124,7 @@ function LoginContent() {
         } else if (error.message.includes('valid email')) {
           setError('E-mail inválido. Verifique e tente novamente.')
         } else if (error.message.includes('password')) {
-          setError('Senha fraca. Use pelo menos 6 caracteres.')
+          setError('Senha fraca. Use pelo menos 8 caracteres com numeros.')
         } else {
           setError(`Erro ao criar conta: ${error.message}`)
         }
@@ -219,7 +223,7 @@ function LoginContent() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition-colors focus:border-brand-900"
-                  minLength={6}
+                  minLength={8}
                   required
                 />
               </div>
@@ -236,7 +240,7 @@ function LoginContent() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="••••••••"
                   className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition-colors focus:border-brand-900"
-                  minLength={6}
+                  minLength={8}
                   required
                 />
               </div>

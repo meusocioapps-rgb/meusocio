@@ -84,7 +84,7 @@ function useAdminFeedbacks() {
         .select('*')
         .order('created_at', { ascending: false })
       if (error) {
-        console.warn('Feedback table not available:', error.message)
+        // Feedback table may not exist yet
         return [] as Feedback[]
       }
       return data as Feedback[]
@@ -255,20 +255,19 @@ export default function AdminPage() {
     onError: () => toast('Erro ao reativar usuario'),
   })
 
-  // Delete user profile (soft delete - removes profile data)
+  // Delete user and ALL related data (LGPD compliance)
   const deleteUser = useMutation({
     mutationFn: async (userId: string) => {
-      const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', userId)
+      const { error } = await supabase.rpc('delete_user_complete', {
+        target_user_id: userId,
+      })
       if (error) throw error
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] })
       setSelectedUser(null)
       setConfirmAction(null)
-      toast('Perfil do usuario removido')
+      toast('Usuario e todos os dados removidos')
     },
     onError: () => toast('Erro ao remover usuario'),
   })

@@ -1,7 +1,42 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { createServerSupabase } from '@/lib/supabase/server'
 
-const ADMIN_EMAIL = 'meusocio.apps@gmail.com'
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'meusocio.apps@gmail.com'
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
+const notifySchema = z.object({
+  type: z.enum(['email', 'whatsapp']),
+  to_email: z.string().email().max(320).optional(),
+  to_phone: z.string().max(30).optional(),
+  to_name: z.string().max(200),
+  subject: z.string().max(500).optional(),
+  message: z.string().min(1).max(10000),
+})
+
+// Rate limit: max 30 notifications per 15 min
+const rateLimitMap = new Map<string, { count: number; reset: number }>()
+
+function checkRateLimit(key: string): boolean {
+  const now = Date.now()
+  const windowMs = 15 * 60 * 1000
+  const maxRequests = 30
+  const entry = rateLimitMap.get(key)
+  if (!entry || now > entry.reset) {
+    rateLimitMap.set(key, { count: 1, reset: now + windowMs })
+    return true
+  }
+  entry.count++
+  return entry.count <= maxRequests
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,22 +54,25 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const body = await req.json()
-    const { type, to_email, to_phone, to_name, subject, message } = body as {
-      type: 'email' | 'whatsapp'
-      to_email: string
-      to_phone?: string
-      to_name: string
-      subject?: string
-      message: string
+    // Rate limiting by admin user
+    if (!checkRateLimit(user.id)) {
+      return NextResponse.json(
+        { error: 'Muitas requisicoes. Aguarde alguns minutos.' },
+        { status: 429 },
+      )
     }
 
-    if (!type || !message?.trim()) {
+    // Validate input
+    const body = await req.json()
+    const result = notifySchema.safeParse(body)
+    if (!result.success) {
       return NextResponse.json(
-        { error: 'Tipo e mensagem sao obrigatorios' },
+        { error: 'Dados invalidos', details: result.error.flatten().fieldErrors },
         { status: 400 },
       )
     }
+
+    const { type, to_email, to_phone, to_name, subject, message } = result.data
 
     // --- EMAIL via Resend ---
     if (type === 'email') {
@@ -53,6 +91,8 @@ export async function POST(req: NextRequest) {
         )
       }
 
+      const safeName = escapeHtml(to_name)
+      const safeMessage = escapeHtml(message)
       const emailSubject = subject || `Mensagem do Meu Socio para ${to_name}`
 
       const htmlBody = `
@@ -61,8 +101,8 @@ export async function POST(req: NextRequest) {
             <h2 style="margin: 0; font-size: 18px;">Meu Socio</h2>
           </div>
           <div style="border: 1px solid #e5e7eb; border-top: none; padding: 24px; border-radius: 0 0 12px 12px;">
-            <p style="font-size: 14px; color: #374151;">Ola, <strong>${to_name}</strong>!</p>
-            <div style="background: #f9fafb; border-radius: 8px; padding: 16px; font-size: 14px; line-height: 1.6; color: #1f2937; white-space: pre-wrap;">${message}</div>
+            <p style="font-size: 14px; color: #374151;">Ola, <strong>${safeName}</strong>!</p>
+            <div style="background: #f9fafb; border-radius: 8px; padding: 16px; font-size: 14px; line-height: 1.6; color: #1f2937; white-space: pre-wrap;">${safeMessage}</div>
             <p style="margin-top: 16px; font-size: 12px; color: #9ca3af;">
               Enviado em: ${new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
             </p>
@@ -85,8 +125,6 @@ export async function POST(req: NextRequest) {
       })
 
       if (!resendRes.ok) {
-        const errData = await resendRes.json().catch(() => ({}))
-        console.error('Resend error:', errData)
         return NextResponse.json(
           { error: 'Erro ao enviar email via Resend' },
           { status: 500 },
@@ -106,7 +144,6 @@ export async function POST(req: NextRequest) {
         )
       }
 
-      // Remove non-numeric characters from phone
       const cleanPhone = to_phone.replace(/\D/g, '')
       const encodedMessage = encodeURIComponent(message)
       const waUrl = `https://wa.me/${cleanPhone}?text=${encodedMessage}`
@@ -118,8 +155,7 @@ export async function POST(req: NextRequest) {
       { error: 'Tipo invalido. Use "email" ou "whatsapp".' },
       { status: 400 },
     )
-  } catch (err) {
-    console.error('Admin notify error:', err)
+  } catch {
     return NextResponse.json(
       { error: 'Erro interno ao enviar notificacao' },
       { status: 500 },

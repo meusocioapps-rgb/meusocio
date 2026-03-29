@@ -29,13 +29,17 @@ export async function POST(req: NextRequest) {
 
     const hadTrialBefore = !!subscription?.trial_ends_at
 
+    if (!process.env.STRIPE_PRICE_ID) {
+      return NextResponse.json({ error: 'Configuracao de pagamento indisponivel' }, { status: 500 })
+    }
+
     const sessionParams: Record<string, unknown> = {
       mode: 'subscription' as const,
       customer: customerId,
       customer_email: undefined, // customer already set
       line_items: [
         {
-          price: process.env.STRIPE_PRICE_ID!,
+          price: process.env.STRIPE_PRICE_ID,
           quantity: 1,
         },
       ],
@@ -57,8 +61,7 @@ export async function POST(req: NextRequest) {
     )
 
     return NextResponse.json({ url: session.url })
-  } catch (err) {
-    console.error('Stripe checkout error:', err)
+  } catch {
     return NextResponse.json(
       { error: 'Erro ao criar sessao de checkout' },
       { status: 500 },

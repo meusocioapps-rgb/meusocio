@@ -23,7 +23,7 @@ import { cn, getInitials } from '@/lib/utils'
 import { useUI } from '@/lib/store'
 import { useProfile } from '@/hooks/use-profile'
 
-const ADMIN_EMAIL = 'meusocio.apps@gmail.com'
+const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'meusocio.apps@gmail.com'
 
 const baseSections = [
   {

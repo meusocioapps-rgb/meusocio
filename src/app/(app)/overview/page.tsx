@@ -41,7 +41,8 @@ export default function OverviewPage() {
 
   const currentMonth = getCurrentMonth()
   const monthStart = currentMonth + '-01'
-  const monthEnd = currentMonth + '-31'
+  const [y, mo] = currentMonth.split('-').map(Number)
+  const monthEnd = `${currentMonth}-${String(new Date(y, mo, 0).getDate()).padStart(2, '0')}`
   const { data: monthAppointments } = useAppointmentsByRange(monthStart, monthEnd)
 
   // Previous month for comparison

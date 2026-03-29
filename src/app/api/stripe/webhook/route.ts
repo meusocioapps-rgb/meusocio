@@ -6,13 +6,17 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 function getStripeInstance() {
-  return new Stripe(process.env.STRIPE_SECRET_KEY!)
+  if (!process.env.STRIPE_SECRET_KEY) throw new Error('STRIPE_SECRET_KEY not configured')
+  return new Stripe(process.env.STRIPE_SECRET_KEY)
 }
 
 function getSupabaseAdmin() {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('Supabase env vars not configured')
+  }
   return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
   )
 }
 
@@ -40,7 +44,8 @@ export async function POST(req: NextRequest) {
 
     let event: Stripe.Event
     try {
-      event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET!)
+      if (!process.env.STRIPE_WEBHOOK_SECRET) throw new Error('STRIPE_WEBHOOK_SECRET not configured')
+      event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET)
     } catch {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
     }
@@ -127,8 +132,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ received: true })
-  } catch (err) {
-    console.error('Webhook error:', err)
+  } catch {
     return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 })
   }
 }

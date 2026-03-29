@@ -37,8 +37,7 @@ export async function POST(req: NextRequest) {
     })
 
     return NextResponse.json({ url: session.url })
-  } catch (err) {
-    console.error('Stripe portal error:', err)
+  } catch {
     return NextResponse.json(
       { error: 'Erro ao abrir portal de assinatura' },
       { status: 500 },

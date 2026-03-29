@@ -50,7 +50,7 @@ export default function FeedbackPage() {
         })
 
       if (insertError) {
-        console.warn('Erro ao salvar feedback:', insertError.message)
+        // Error saving feedback silently — email notification still sent
       }
 
       // Send email notification via API route
@@ -66,8 +66,8 @@ export default function FeedbackPage() {
             message: message.trim(),
           }),
         })
-      } catch (emailErr) {
-        console.warn('Email fallback failed:', emailErr)
+      } catch {
+        // Email notification failed silently — feedback already saved to DB
       }
 
       setSent(true)
@@ -76,8 +76,7 @@ export default function FeedbackPage() {
 
       // Reset after 5 seconds
       setTimeout(() => setSent(false), 5000)
-    } catch (err) {
-      console.error('Erro ao enviar feedback:', err)
+    } catch {
       toast('Erro ao enviar. Tente novamente.')
     } finally {
       setSending(false)

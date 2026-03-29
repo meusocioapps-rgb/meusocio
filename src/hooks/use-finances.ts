@@ -7,6 +7,12 @@ import { getCurrentMonth } from '@/lib/utils'
 
 const supabase = createClient()
 
+function getMonthEnd(month: string): string {
+  const [year, m] = month.split('-').map(Number)
+  const lastDay = new Date(year, m, 0).getDate()
+  return `${month}-${String(lastDay).padStart(2, '0')}`
+}
+
 export function useFinancialEntries(month?: string) {
   const m = month || getCurrentMonth()
 
@@ -17,7 +23,7 @@ export function useFinancialEntries(month?: string) {
         .from('financial_entries')
         .select('*')
         .gte('entry_date', m + '-01')
-        .lte('entry_date', m + '-31')
+        .lte('entry_date', getMonthEnd(m))
         .order('entry_date', { ascending: false })
       if (error) throw error
       return data as FinancialEntry[]

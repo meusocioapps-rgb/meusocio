@@ -22,6 +22,8 @@ import {
   Users,
   DollarSign,
   Loader2,
+  Trash2,
+  AlertTriangle,
 } from 'lucide-react'
 
 const supabase = createClient()
@@ -57,6 +59,9 @@ export default function ProfilePage() {
 
   const [editing, setEditing] = useState(false)
   const [exportLoading, setExportLoading] = useState<ExportType | null>(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [deleting, setDeleting] = useState(false)
   const [form, setForm] = useState({
     full_name: '',
     business_name: '',
@@ -110,6 +115,24 @@ export default function ProfilePage() {
       await logout.mutateAsync()
     } catch {
       toast('Erro ao sair')
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== 'EXCLUIR') return
+    setDeleting(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Nao autenticado')
+      const { error } = await supabase.rpc('delete_user_complete', {
+        target_user_id: user.id,
+      })
+      if (error) throw error
+      await supabase.auth.signOut()
+      window.location.href = '/login'
+    } catch {
+      toast('Erro ao excluir conta. Entre em contato com o suporte.')
+      setDeleting(false)
     }
   }
 
@@ -499,6 +522,72 @@ export default function ProfilePage() {
         <LogOut size={15} />
         {logout.isPending ? 'Saindo...' : 'Sair da conta'}
       </button>
+
+      {/* Excluir Conta (LGPD) */}
+      <div className="mb-4 rounded-xl border border-red-200 bg-white">
+        <div className="border-b border-red-100 px-5 py-3">
+          <div className="flex items-center gap-2">
+            <Trash2 size={14} className="text-red-400" />
+            <h3 className="text-[13px] font-semibold text-red-600">Excluir Conta</h3>
+          </div>
+          <p className="mt-0.5 text-[11px] text-gray-400">
+            Exclua permanentemente sua conta e todos os seus dados
+          </p>
+        </div>
+        <div className="p-5">
+          {!showDeleteConfirm ? (
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-red-200 py-2.5 text-[12px] font-medium text-red-500 hover:bg-red-50"
+            >
+              <Trash2 size={13} />
+              Quero excluir minha conta
+            </button>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex items-start gap-2 rounded-lg bg-red-50 p-3">
+                <AlertTriangle size={16} className="mt-0.5 shrink-0 text-red-500" />
+                <div className="text-[11px] leading-relaxed text-red-700">
+                  <strong>Acao irreversivel!</strong> Todos os seus dados serao excluidos permanentemente:
+                  clientes, agendamentos, financeiro, servicos, configuracoes e perfil.
+                  Essa acao nao pode ser desfeita.
+                </div>
+              </div>
+              <div>
+                <label className="mb-1 block text-[10px] font-semibold uppercase text-gray-500">
+                  Digite EXCLUIR para confirmar
+                </label>
+                <input
+                  type="text"
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  placeholder="EXCLUIR"
+                  className="w-full rounded-lg border border-red-200 px-3 py-2 text-[13px] outline-none focus:border-red-500"
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setShowDeleteConfirm(false)
+                    setDeleteConfirmText('')
+                  }}
+                  className="flex-1 rounded-lg border border-gray-300 py-2.5 text-xs font-medium text-gray-600"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleDeleteAccount}
+                  disabled={deleteConfirmText !== 'EXCLUIR' || deleting}
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-red-600 py-2.5 text-xs font-medium text-white disabled:opacity-40"
+                >
+                  <Trash2 size={13} />
+                  {deleting ? 'Excluindo...' : 'Excluir permanentemente'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Footer info */}
       <div className="pb-4 text-center text-[10px] text-gray-400">
