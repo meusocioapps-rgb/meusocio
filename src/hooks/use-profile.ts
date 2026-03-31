@@ -131,6 +131,7 @@ export function useSubscription() {
         trial_ends_at: string | null
         current_period_start: string | null
         current_period_end: string | null
+        stripe_customer_id: string | null
         created_at: string
       }
     },

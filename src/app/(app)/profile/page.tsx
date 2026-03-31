@@ -361,9 +361,12 @@ export default function ProfilePage() {
               </p>
             )}
           </div>
-          <button className="rounded-lg bg-brand-900 px-4 py-2 text-[11px] font-medium text-white">
-            Upgrade
-          </button>
+          <a
+            href="/assinatura"
+            className="rounded-lg bg-brand-900 px-4 py-2 text-[11px] font-medium text-white"
+          >
+            {subscription?.status === 'active' ? 'Gerenciar' : 'Upgrade'}
+          </a>
         </div>
       </div>
 
