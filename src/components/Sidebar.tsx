@@ -18,10 +18,11 @@ import {
   Shield,
   MessageSquare,
   X,
+  Sparkles,
 } from 'lucide-react'
 import { cn, getInitials } from '@/lib/utils'
 import { useUI } from '@/lib/store'
-import { useProfile } from '@/hooks/use-profile'
+import { useProfile, useSubscription } from '@/hooks/use-profile'
 
 const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'meusocio.apps@gmail.com'
 
@@ -33,7 +34,7 @@ const baseSections = [
       { href: '/schedule/new', label: 'Novo Atendimento', icon: PlusCircle },
       { href: '/clients', label: 'Clientes', icon: Users },
       { href: '/schedule', label: 'Agenda', icon: Calendar },
-      { href: '/overview', label: 'Visao Geral', icon: BarChart3 },
+      { href: '/overview', label: 'Visão Geral', icon: BarChart3 },
     ],
   },
   {
@@ -42,7 +43,7 @@ const baseSections = [
       { href: '/finances', label: 'Receitas', icon: DollarSign },
       { href: '/finances/expenses', label: 'Despesas', icon: TrendingDown },
       { href: '/finances/pending', label: 'Projeção', icon: CreditCard },
-      { href: '/reports', label: 'Relatorio', icon: FileText },
+      { href: '/reports', label: 'Relatório', icon: FileText },
     ],
   },
 ]
@@ -51,6 +52,7 @@ export function Sidebar() {
   const pathname = usePathname()
   const { drawerOpen, closeDrawer } = useUI()
   const { data: profile } = useProfile()
+  const { data: subscription } = useSubscription()
 
   const isAdmin = profile?.email === ADMIN_EMAIL
 
@@ -61,7 +63,7 @@ export function Sidebar() {
       items: [
         ...(isAdmin ? [{ href: '/admin', label: 'Admin', icon: Shield }] : []),
         { href: '/profile', label: 'Perfil', icon: User },
-        { href: '/settings', label: 'Configuracoes', icon: Settings },
+        { href: '/settings', label: 'Configurações', icon: Settings },
         { href: '/feedback', label: 'Feedback', icon: MessageSquare },
         { href: '/support', label: 'Ajuda', icon: HelpCircle },
       ],
@@ -109,7 +111,7 @@ export function Sidebar() {
               </svg>
               <div className="min-w-0">
                 <div className="truncate text-sm font-semibold text-white">{profileName}</div>
-                <div className="text-[10px] text-brand-300/70">Gestao para MEI</div>
+                <div className="text-[10px] text-brand-300/70">Gestão para MEI</div>
               </div>
             </div>
             {/* Close button - mobile only */}
@@ -153,12 +155,32 @@ export function Sidebar() {
           ))}
         </nav>
 
-        {/* Footer with plan badge */}
-        <div className="border-t border-white/10 px-4 py-3">
-          <span className="inline-block rounded-full bg-brand-500/20 px-2.5 py-0.5 text-[9px] font-semibold text-brand-500">
-            PRO
-          </span>
-          <div className="mt-1 text-[10px] text-brand-300/50">R$39,90/mes</div>
+        {/* Footer with upgrade/plan */}
+        <div className="border-t border-white/10 px-3 py-3">
+          {subscription?.status === 'active' ? (
+            <Link
+              href="/assinatura"
+              onClick={handleLinkClick}
+              className="flex items-center gap-2 rounded-lg bg-white/10 px-3 py-2"
+            >
+              <span className="rounded-full bg-green-500/20 px-2 py-0.5 text-[9px] font-semibold text-green-400">
+                ATIVO
+              </span>
+              <span className="text-[10px] text-brand-300/70">Gerenciar plano</span>
+            </Link>
+          ) : (
+            <Link
+              href="/assinatura"
+              onClick={handleLinkClick}
+              className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-2.5 text-white shadow-lg transition-transform hover:scale-[1.02]"
+            >
+              <Sparkles size={16} />
+              <div>
+                <div className="text-[12px] font-bold">Fazer upgrade</div>
+                <div className="text-[9px] opacity-80">R$39,90/mês</div>
+              </div>
+            </Link>
+          )}
         </div>
       </aside>
     </>

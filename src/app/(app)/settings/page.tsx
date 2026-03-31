@@ -57,10 +57,10 @@ type CustomField = {
 
 const FIELD_TYPE_LABELS: Record<CustomField['field_type'], string> = {
   text: 'Texto',
-  number: 'Numero',
+  number: 'Número',
   date: 'Data',
-  select: 'Selecao',
-  boolean: 'Sim/Nao',
+  select: 'Seleção',
+  boolean: 'Sim/Não',
 }
 
 function useCustomFields() {
@@ -180,7 +180,7 @@ export default function SettingsPage() {
       recurrence_min_visits: minVisits,
       monthly_goal: monthlyGoal,
     })
-    toast('Configuracoes salvas!')
+    toast('Configurações salvas!')
   }
 
   const startEditClient = (c: { id: string; name: string; phone: string | null; email: string | null; instagram: string | null }) => {
@@ -227,7 +227,7 @@ export default function SettingsPage() {
 
   return (
     <div className="mx-auto max-w-lg">
-      <h2 className="mb-4 text-[15px] font-semibold">Configuracoes</h2>
+      <h2 className="mb-4 text-[15px] font-semibold">Configurações</h2>
 
       {/* Redefinir Senha */}
       <PasswordChangeSection />
@@ -513,7 +513,7 @@ export default function SettingsPage() {
             <div className="text-[11px] text-gray-400">
               {monthlyGoal > 0
                 ? `Atual: ${formatCurrency(monthlyGoal)} (receitas - despesas)`
-                : 'Nao definida'}
+                : 'Não definida'}
             </div>
           </div>
           <input
@@ -770,10 +770,10 @@ export default function SettingsPage() {
                   required
                 >
                   <option value="text">Texto</option>
-                  <option value="number">Numero</option>
+                  <option value="number">Número</option>
                   <option value="date">Data</option>
-                  <option value="select">Selecao</option>
-                  <option value="boolean">Sim/Nao</option>
+                  <option value="select">Seleção</option>
+                  <option value="boolean">Sim/Não</option>
                 </select>
               </div>
               <div className="mb-4">

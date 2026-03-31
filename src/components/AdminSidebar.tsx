@@ -20,7 +20,7 @@ const adminSections = [
     title: 'Plataforma',
     items: [
       { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-      { href: '/admin/users', label: 'Usuarios', icon: Users },
+      { href: '/admin/users', label: 'Usuários', icon: Users },
       { href: '/admin/feedbacks', label: 'Feedbacks', icon: MessageSquare },
       { href: '/admin/subscriptions', label: 'Assinaturas', icon: CreditCard },
     ],
@@ -28,7 +28,7 @@ const adminSections = [
   {
     title: 'Sistema',
     items: [
-      { href: '/admin/settings', label: 'Configuracoes', icon: Settings },
+      { href: '/admin/settings', label: 'Configurações', icon: Settings },
     ],
   },
 ]
@@ -64,7 +64,7 @@ export function AdminSidebar() {
                 <path d="M 25 26 L 39 14 L 46 7" stroke="#F4A261" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
               </svg>
               <div className="min-w-0">
-                <div className="truncate text-sm font-semibold text-white">Meu Socio</div>
+                <div className="truncate text-sm font-semibold text-white">Meu Sócio</div>
                 <div className="text-[10px] text-orange-400 font-medium">Painel Admin</div>
               </div>
             </div>

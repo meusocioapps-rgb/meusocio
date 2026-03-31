@@ -303,13 +303,13 @@ function LoginContent() {
 
         <div className="mt-6 text-center">
           <p className="text-[10px] text-gray-400">
-            Ao criar sua conta, voce concorda com nossos{' '}
+            Ao criar sua conta, você concorda com nossos{' '}
             <a href="/terms" className="font-semibold text-brand-900 hover:underline">Termos de Uso</a>
             {' '}e{' '}
-            <a href="/privacy" className="font-semibold text-brand-900 hover:underline">Politica de Privacidade</a>.
+            <a href="/privacy" className="font-semibold text-brand-900 hover:underline">Política de Privacidade</a>.
           </p>
           <p className="mt-2 text-[10px] text-gray-400">
-            Meu Socio v1.0 · © 2026
+            Meu Sócio v1.0 · © 2026
           </p>
         </div>
       </div>

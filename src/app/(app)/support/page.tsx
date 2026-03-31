@@ -128,7 +128,7 @@ export default function SupportPage() {
       {/* Canais de contato */}
       <div className="mb-6 grid grid-cols-2 gap-3">
         <a
-          href="https://wa.me/5511999999999?text=Olá! Preciso de ajuda com o Meu Sócio"
+          href="https://wa.me/5521997302942?text=Olá! Preciso de ajuda com o Meu Sócio"
           target="_blank"
           className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-4 hover:border-green-300 hover:bg-green-50"
         >
@@ -141,7 +141,7 @@ export default function SupportPage() {
           </div>
         </a>
         <a
-          href="mailto:suporte@meusocio.com.br"
+          href="mailto:meusocio.apps@gmail.com"
           className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-4 hover:border-blue-300 hover:bg-blue-50"
         >
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
@@ -149,7 +149,7 @@ export default function SupportPage() {
           </div>
           <div>
             <div className="text-[13px] font-semibold">E-mail</div>
-            <div className="text-[10px] text-gray-400">suporte@meusocio.com.br</div>
+            <div className="text-[10px] text-gray-400">meusocio.apps@gmail.com</div>
           </div>
         </a>
       </div>
@@ -226,7 +226,7 @@ export default function SupportPage() {
           Fale diretamente com nosso suporte pelo WhatsApp
         </p>
         <a
-          href="https://wa.me/5511999999999?text=Olá! Preciso de ajuda com o Meu Sócio"
+          href="https://wa.me/5521997302942?text=Olá! Preciso de ajuda com o Meu Sócio"
           target="_blank"
           className="mt-3 inline-flex items-center gap-1 rounded-lg bg-brand-900 px-4 py-2 text-xs font-medium text-white"
         >

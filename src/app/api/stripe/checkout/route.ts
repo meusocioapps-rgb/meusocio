@@ -61,9 +61,10 @@ export async function POST(req: NextRequest) {
     )
 
     return NextResponse.json({ url: session.url })
-  } catch {
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Erro desconhecido'
     return NextResponse.json(
-      { error: 'Erro ao criar sessao de checkout' },
+      { error: `Erro ao criar sessão de checkout: ${message}` },
       { status: 500 },
     )
   }

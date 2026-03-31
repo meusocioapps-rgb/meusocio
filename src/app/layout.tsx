@@ -4,13 +4,13 @@ import { Providers } from './providers'
 import { CookieConsent } from '@/components/CookieConsent'
 
 export const metadata: Metadata = {
-  title: 'Meu Socio',
-  description: 'Gestao para autonomos e MEI',
+  title: 'Meu Sócio',
+  description: 'Gestão para autônomos e MEI',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Meu Socio',
+    title: 'Meu Sócio',
   },
 }
 

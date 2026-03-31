@@ -10,8 +10,8 @@ export default function AdminSettingsPage() {
   return (
     <div className="mx-auto max-w-2xl">
       <div className="mb-6">
-        <h1 className="text-xl font-bold text-gray-900">Configuracoes da Plataforma</h1>
-        <p className="text-sm text-gray-500">Ajustes gerais do sistema Meu Socio</p>
+        <h1 className="text-xl font-bold text-gray-900">Configurações da Plataforma</h1>
+        <p className="text-sm text-gray-500">Ajustes gerais do sistema Meu Sócio</p>
       </div>
 
       <div className="space-y-4">

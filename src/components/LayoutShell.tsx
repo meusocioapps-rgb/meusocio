@@ -110,7 +110,7 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
       <Sidebar />
       <main className="flex flex-1 flex-col overflow-hidden">
         <TopBar />
-        <div className="flex-1 overflow-y-auto p-4 pb-5 md:p-5 md:pb-5">
+        <div className="flex-1 overflow-y-auto p-4 pb-20 md:p-5 md:pb-5">
           {children}
         </div>
       </main>

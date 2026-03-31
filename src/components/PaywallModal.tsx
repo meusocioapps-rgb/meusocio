@@ -19,10 +19,10 @@ export function PaywallModal({ daysLeft, isExpired }: PaywallModalProps) {
       if (data.url) {
         window.location.href = data.url
       } else {
-        alert('Erro ao criar sessao de pagamento. Tente novamente.')
+        alert(data.error || 'Erro ao criar sessão de pagamento. Tente novamente.')
       }
     } catch {
-      alert('Erro de conexao. Tente novamente.')
+      alert('Erro de conexão. Tente novamente.')
     } finally {
       setLoading(false)
     }
@@ -42,11 +42,11 @@ export function PaywallModal({ daysLeft, isExpired }: PaywallModalProps) {
             <CreditCard size={28} className="text-brand-900" />
           </div>
           <h2 className="text-lg font-bold text-gray-900">
-            {isExpired ? 'Seu periodo gratuito terminou' : 'Assine o Meu Socio'}
+            {isExpired ? 'Seu período gratuito terminou' : 'Assine o Meu Sócio'}
           </h2>
           <p className="mt-1 text-sm text-gray-500">
             {isExpired
-              ? 'Para continuar usando o Meu Socio, escolha um plano.'
+              ? 'Para continuar usando o Meu Sócio, escolha um plano.'
               : 'Desbloqueie todas as funcionalidades.'}
           </p>
         </div>
@@ -54,10 +54,10 @@ export function PaywallModal({ daysLeft, isExpired }: PaywallModalProps) {
         {/* Plan Card */}
         <div className="rounded-xl border-2 border-brand-900 bg-brand-50/50 p-5 mb-5">
           <div className="flex items-baseline justify-between mb-3">
-            <span className="text-sm font-semibold text-brand-900">Plano Pro</span>
+            <span className="text-sm font-semibold text-brand-900">Meu Sócio</span>
             <div>
               <span className="text-2xl font-bold text-gray-900">R$ 39,90</span>
-              <span className="text-sm text-gray-500">/mes</span>
+              <span className="text-sm text-gray-500">/mês</span>
             </div>
           </div>
 
@@ -66,9 +66,9 @@ export function PaywallModal({ daysLeft, isExpired }: PaywallModalProps) {
               'Clientes ilimitados',
               'Agendamentos ilimitados',
               'Controle financeiro completo',
-              'Relatorios e visao geral',
-              'Exportacao de dados (CSV)',
-              'Suporte prioritario',
+              'Relatórios e visão geral',
+              'Exportação de dados (CSV)',
+              'Suporte prioritário',
             ].map((f) => (
               <div key={f} className="flex items-center gap-2 text-xs text-gray-700">
                 <Check size={14} className="text-green-600 shrink-0" />

@@ -22,7 +22,7 @@ function AssinaturaContent() {
       if (data.url) {
         window.location.href = data.url
       } else {
-        alert(data.error || 'Erro ao criar sessao de pagamento')
+        alert(data.error || 'Erro ao criar sessão de pagamento')
       }
     } catch {
       alert('Erro de conexao. Tente novamente.')
@@ -74,7 +74,7 @@ function AssinaturaContent() {
           <div>
             <h3 className="text-sm font-semibold text-green-800">Pagamento confirmado!</h3>
             <p className="mt-0.5 text-xs text-green-600">
-              Sua assinatura foi ativada com sucesso. Aproveite o Meu Socio!
+              Sua assinatura foi ativada com sucesso. Aproveite o Meu Sócio!
             </p>
           </div>
         </div>
@@ -102,7 +102,7 @@ function AssinaturaContent() {
                 <Check size={16} className="text-green-600" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold">Plano Pro Ativo</h3>
+                <h3 className="text-sm font-semibold">Plano Ativo</h3>
                 <p className="text-[11px] text-gray-400">
                   Renova em {formatDate(subscription?.current_period_end ?? null)}
                 </p>
@@ -140,7 +140,7 @@ function AssinaturaContent() {
             <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-100">
               <CreditCard size={24} className="text-brand-900" />
             </div>
-            <h2 className="text-lg font-bold text-gray-900">Meu Socio Pro</h2>
+            <h2 className="text-lg font-bold text-gray-900">Meu Sócio</h2>
             <div className="mt-1">
               <span className="text-3xl font-bold text-gray-900">R$ 39,90</span>
               <span className="text-sm text-gray-500">/mes</span>
@@ -152,10 +152,10 @@ function AssinaturaContent() {
               'Clientes ilimitados',
               'Agendamentos ilimitados',
               'Controle financeiro completo',
-              'Relatorios e visao geral',
-              'Exportacao de dados (CSV)',
+              'Relatórios e visão geral',
+              'Exportação de dados (CSV)',
               'Campos personalizados',
-              'Suporte prioritario',
+              'Suporte prioritário',
             ].map((f) => (
               <div key={f} className="flex items-center gap-2.5 text-[13px] text-gray-700">
                 <Check size={15} className="text-green-600 shrink-0" />
