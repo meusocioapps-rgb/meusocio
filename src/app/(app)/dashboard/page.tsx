@@ -31,6 +31,8 @@ import { AppointmentModal } from '@/components/AppointmentModal'
 import { PostAppointmentModal } from '@/components/PostAppointmentModal'
 import { toast } from '@/components/Toast'
 import type { AppointmentWithClient } from '@/lib/types'
+import { useProfile } from '@/hooks/use-profile'
+import { MessageCircle } from 'lucide-react'
 
 export default function DashboardPage() {
   const { data: stats, isLoading: loadingStats } = useDashboardStats()
@@ -39,6 +41,7 @@ export default function DashboardPage() {
   const { data: notifications } = useNotifications()
   const { data: summary } = useFinancialSummary()
   const { data: settings } = useSettings()
+  const { data: profile } = useProfile()
   const confirmMutation = useConfirmAppointment()
 
   // Calcular "a receber" dos agendamentos pendentes do mês
@@ -300,10 +303,12 @@ export default function DashboardPage() {
               {todayAppts.map((a) => (
                 <div
                   key={a.id}
-                  onClick={() => setSelectedAppt(a)}
-                  className="flex cursor-pointer items-center justify-between border-b border-gray-50 py-2 transition-colors hover:bg-gray-50 last:border-0"
+                  className="flex items-center justify-between border-b border-gray-50 py-2 last:border-0"
                 >
-                  <div>
+                  <div
+                    onClick={() => setSelectedAppt(a)}
+                    className="flex-1 cursor-pointer transition-colors hover:bg-gray-50"
+                  >
                     <div className="text-xs font-medium">
                       {formatTime(a.scheduled_time)} · {a.client_name}
                     </div>
@@ -311,14 +316,34 @@ export default function DashboardPage() {
                       {a.service_name}
                     </div>
                   </div>
-                  <span
-                    className={cn(
-                      'rounded-full px-2 py-0.5 text-[10px] font-medium',
-                      statusColor(a.status)
+                  <div className="flex items-center gap-1.5">
+                    {a.client_phone && (a.status === 'scheduled' || a.status === 'confirmed') && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          const bName = profile?.business_name || profile?.full_name || 'Meu Sócio'
+                          const bAddr = profile?.address || ''
+                          const [y, m, d] = a.scheduled_date.split('-')
+                          const msg = `Oi, ${a.client_name}! Tudo bem? 😊\nSó passando pra lembrar do seu agendamento:\n\n✅ Serviço: ${a.service_name}\n📅 Data: ${d}/${m}/${y}\n🕐 Horário: ${formatTime(a.scheduled_time)}${bAddr ? `\n📍 Endereço: ${bAddr}` : ''}\n\nTe esperamos! Qualquer dúvida é só chamar 🙌`
+                          const phone = a.client_phone!.replace(/\D/g, '')
+                          window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(msg)}`, '_blank')
+                        }}
+                        className="rounded-lg bg-green-50 px-2 py-1 text-[10px] font-medium text-green-700 hover:bg-green-100 flex items-center gap-1"
+                        title="Lembrar cliente via WhatsApp"
+                      >
+                        <MessageCircle size={11} />
+                        Lembrar
+                      </button>
                     )}
-                  >
-                    {statusLabel(a.status)}
-                  </span>
+                    <span
+                      className={cn(
+                        'rounded-full px-2 py-0.5 text-[10px] font-medium',
+                        statusColor(a.status)
+                      )}
+                    >
+                      {statusLabel(a.status)}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>

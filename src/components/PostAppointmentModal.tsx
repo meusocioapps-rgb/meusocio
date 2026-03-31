@@ -25,6 +25,7 @@ export function PostAppointmentModal({
   const [returnServiceName, setReturnServiceName] = useState(appt.service_name)
   const [returnValue, setReturnValue] = useState(appt.estimated_value)
   const [isReturnFree, setIsReturnFree] = useState(false)
+  const [materialCost, setMaterialCost] = useState(0)
 
   const { data: services } = useServices()
   const createAppointment = useCreateAppointment()
@@ -36,6 +37,10 @@ export function PostAppointmentModal({
     }
 
     try {
+      const returnNotes = isReturnFree
+        ? `Retorno gratuito${materialCost > 0 ? ` | CMV: R$${materialCost.toFixed(2)}` : ''}`
+        : undefined
+
       await createAppointment.mutateAsync({
         client_id: appt.client_id,
         service_id: returnServiceId || undefined,
@@ -43,7 +48,8 @@ export function PostAppointmentModal({
         scheduled_date: returnDate,
         scheduled_time: returnTime,
         estimated_value: isReturnFree ? 0 : returnValue,
-        notes: isReturnFree ? 'Retorno gratuito' : undefined,
+        is_free_return: isReturnFree,
+        notes: returnNotes,
       })
       toast('✅ Retorno agendado!')
       onClose()
@@ -138,7 +144,7 @@ export function PostAppointmentModal({
           </div>
 
           {/* Toggle retorno gratuito */}
-          <div className="mb-4 flex items-center justify-between rounded-xl border border-gray-200 px-3 py-2.5">
+          <div className="mb-3 flex items-center justify-between rounded-xl border border-gray-200 px-3 py-2.5">
             <div>
               <div className="text-[13px] font-medium">Retorno gratuito</div>
               <div className="text-[10px] text-gray-400">Cortesia, sem cobrar</div>
@@ -158,6 +164,27 @@ export function PostAppointmentModal({
               />
             </button>
           </div>
+
+          {/* CMV para retorno gratuito */}
+          {isReturnFree && (
+            <div className="mb-4">
+              <label className="mb-1 block text-[10px] font-semibold uppercase text-gray-500">
+                Custo de material - CMV (opcional)
+              </label>
+              <input
+                type="number"
+                value={materialCost || ''}
+                onChange={(e) => setMaterialCost(Number(e.target.value))}
+                placeholder="R$ 0,00"
+                step="0.01"
+                min="0"
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-[13px] outline-none focus:border-brand-900"
+              />
+              <p className="mt-1 text-[10px] text-gray-400">
+                Registre o custo interno dos materiais utilizados.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Footer */}

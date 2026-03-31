@@ -57,6 +57,7 @@ export function useCreateAppointment() {
       scheduled_date: string
       scheduled_time: string
       estimated_value: number
+      is_free_return?: boolean
       notes?: string
     }) => {
       const { data, error } = await supabase

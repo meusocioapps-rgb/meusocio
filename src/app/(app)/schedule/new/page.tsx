@@ -5,8 +5,10 @@ import { useRouter } from 'next/navigation'
 import { useClients, useCreateClient } from '@/hooks/use-clients'
 import { useServices } from '@/hooks/use-services'
 import { useCreateAppointment } from '@/hooks/use-appointments'
+import { useProfile } from '@/hooks/use-profile'
 import { formatCurrency, getToday, getInitials } from '@/lib/utils'
 import { toast } from '@/components/Toast'
+import { WhatsAppConfirmModal } from '@/components/WhatsAppConfirmModal'
 import { Search, Plus, X, UserPlus } from 'lucide-react'
 
 export default function NewAppointmentPage() {
@@ -15,6 +17,7 @@ export default function NewAppointmentPage() {
   const { data: services } = useServices()
   const createAppointment = useCreateAppointment()
   const createClient = useCreateClient()
+  const { data: profile } = useProfile()
 
   const [clientId, setClientId] = useState('')
   const [serviceId, setServiceId] = useState('')
@@ -24,6 +27,9 @@ export default function NewAppointmentPage() {
   const [notes, setNotes] = useState('')
   const [clientSearch, setClientSearch] = useState('')
   const [showResults, setShowResults] = useState(false)
+
+  // WhatsApp confirmation modal
+  const [showWhatsApp, setShowWhatsApp] = useState(false)
 
   // Inline new client form
   const [showNewClient, setShowNewClient] = useState(false)
@@ -61,7 +67,7 @@ export default function NewAppointmentPage() {
     })
 
     toast('✅ Atendimento agendado!')
-    router.push('/schedule')
+    setShowWhatsApp(true)
   }
 
   return (
@@ -338,6 +344,23 @@ export default function NewAppointmentPage() {
           {createAppointment.isPending ? 'Salvando...' : 'Salvar atendimento'}
         </button>
       </div>
+
+      {/* Modal WhatsApp confirmação */}
+      {showWhatsApp && selectedClient && (
+        <WhatsAppConfirmModal
+          clientName={selectedClient.name}
+          clientPhone={selectedClient.phone}
+          serviceName={selectedService?.name ?? ''}
+          date={date}
+          time={time}
+          businessName={profile?.business_name || profile?.full_name || 'Meu Sócio'}
+          businessAddress={profile?.address || null}
+          onClose={() => {
+            setShowWhatsApp(false)
+            router.push('/schedule')
+          }}
+        />
+      )}
     </div>
   )
 }

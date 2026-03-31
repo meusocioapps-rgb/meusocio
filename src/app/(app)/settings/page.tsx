@@ -445,17 +445,17 @@ export default function SettingsPage() {
         </button>
       </section>
 
-      {/* Campos Personalizados */}
+      {/* Ficha do cliente */}
       <section className="mb-6">
         <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-gray-400">
-          Campos Personalizados
+          Ficha do Cliente
         </h3>
         <p className="mb-3 text-[11px] text-gray-400">
-          Campos extras para registrar informacoes adicionais nos clientes.
+          Campos extras para registrar informações adicionais nos clientes.
         </p>
         <div className="space-y-2">
           {customFields?.length === 0 && (
-            <p className="py-3 text-center text-[12px] text-gray-400">Nenhum campo personalizado criado.</p>
+            <p className="py-3 text-center text-[12px] text-gray-400">Nenhum campo na ficha do cliente.</p>
           )}
           {customFields?.map((field) => (
             <div key={field.id} className="rounded-xl border border-gray-200 bg-white px-4 py-3">
@@ -724,7 +724,7 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {/* Modal Novo Campo Personalizado */}
+      {/* Modal Novo Campo da Ficha */}
       {showCustomFieldModal && (
         <div
           className="fixed inset-0 z-[200] flex items-end justify-center bg-black/40 p-0 md:items-center md:p-4"
@@ -732,7 +732,7 @@ export default function SettingsPage() {
         >
           <div className="w-full max-w-md rounded-t-2xl bg-white md:rounded-2xl">
             <div className="flex items-center justify-between border-b px-5 py-4">
-              <h3 className="text-[15px] font-semibold">Novo Campo Personalizado</h3>
+              <h3 className="text-[15px] font-semibold">Novo Campo da Ficha</h3>
               <button onClick={() => setShowCustomFieldModal(false)} className="text-gray-400">
                 <X size={22} />
               </button>
@@ -747,7 +747,7 @@ export default function SettingsPage() {
                   description: (fd.get('description') as string) || undefined,
                 })
                 setShowCustomFieldModal(false)
-                toast('Campo personalizado adicionado!')
+                toast('Campo adicionado à ficha!')
               }}
               className="p-5"
             >
@@ -806,7 +806,7 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {/* Modal Confirmar Exclusao de Campo Personalizado */}
+      {/* Modal Confirmar Exclusão de Campo da Ficha */}
       {deletingCustomFieldId && (
         <div
           className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 p-4"

@@ -154,7 +154,7 @@ function AssinaturaContent() {
               'Controle financeiro completo',
               'Relatórios e visão geral',
               'Exportação de dados (CSV)',
-              'Campos personalizados',
+              'Ficha do cliente personalizada',
               'Suporte prioritário',
             ].map((f) => (
               <div key={f} className="flex items-center gap-2.5 text-[13px] text-gray-700">

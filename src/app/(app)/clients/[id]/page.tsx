@@ -502,7 +502,7 @@ export default function ClientDetailPage() {
             {customFields && customFields.length > 0 && (
               <div className="border-t border-gray-100 pt-3">
                 <div className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
-                  Campos personalizados
+                  Ficha do cliente
                 </div>
                 <div className="space-y-3">
                   {customFields.map((field) => (
@@ -615,7 +615,7 @@ export default function ClientDetailPage() {
       {/* Custom field values (view mode) */}
       {!isEditing && customFields && customFields.length > 0 && customFieldValues && customFieldValues.length > 0 && (
         <div className="mb-4 rounded-xl border border-gray-200 bg-white p-4">
-          <h3 className="mb-3 text-[13px] font-semibold">🗂️ Campos personalizados</h3>
+          <h3 className="mb-3 text-[13px] font-semibold">🗂️ Ficha do cliente</h3>
           <div className="space-y-2">
             {customFields.map((field) => {
               const val = customFieldValues.find((v) => v.custom_field_id === field.id)

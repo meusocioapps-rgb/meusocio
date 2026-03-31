@@ -53,8 +53,9 @@ function LoginContent() {
     // --- RECUPERAR SENHA ---
     if (mode === 'forgot') {
       setLoading(true)
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${appUrl}/auth/callback`,
       })
       setLoading(false)
       if (error) {
@@ -109,11 +110,12 @@ function LoginContent() {
       }
 
       setLoading(true)
+      const signUpUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin
       const { error } = await supabase.auth.signUp({
         email: email.trim(),
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: `${signUpUrl}/auth/callback`,
         },
       })
       setLoading(false)
