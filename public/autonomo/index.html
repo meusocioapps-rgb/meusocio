@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MeuSócio — O sócio que todo autônomo merecia ter</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --g900: #0f2318;
+  --g800: #1A3A2E;
+  --g700: #2D6A4F;
+  --g600: #3d8a65;
+  --g500: #52B788;
+  --g400: #74c99f;
+  --g200: #b7e4c7;
+  --g100: #d8f3e4;
+  --g50:  #f0faf4;
+  --amber: #F4A261;
+  --amber-d: #e07d30;
+  --amber-l: #fde8d4;
+  --n900: #111827;
+  --n700: #374151;
+  --n500: #6b7280;
+  --n300: #d1d5db;
+  --n100: #f3f4f6;
+  --n50:  #f9fafb;
+  --white: #ffffff;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow: 0 4px 24px rgba(26,58,46,.10);
+  --shadow-lg: 0 12px 48px rgba(26,58,46,.16);
+  --font: 'Plus Jakarta Sans', -apple-system, sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: var(--font); color: var(--n900); background: var(--white); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+
+.nav-wrap { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,.93); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(26,58,46,.08); }
+.nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; height: 64px; display: flex; align-items: center; justify-content: space-between; }
+.logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; color: var(--g800); text-decoration: none; }
+.btn-nav { background: var(--g800); color: var(--white); padding: 10px 22px; border-radius: 10px; font-size: 14px; font-weight: 700; text-decoration: none; border: none; cursor: pointer; transition: background .2s; display: inline-flex; align-items: center; gap: 6px; }
+.btn-nav:hover { background: var(--g700); }
+
+/* HERO */
+.hero { background: var(--g800); padding: 80px 24px 64px; position: relative; overflow: hidden; }
+.hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 800px 600px at 70% -20%, rgba(82,183,136,.18) 0%, transparent 70%); pointer-events: none; }
+.hero-inner { max-width: 860px; margin: 0 auto; position: relative; z-index: 1; }
+.hero h1 { font-size: clamp(34px, 6vw, 58px); font-weight: 800; line-height: 1.08; color: var(--white); letter-spacing: -.02em; margin-bottom: 24px; }
+.hero h1 em { font-style: normal; color: var(--amber); }
+.hero-sub { font-size: clamp(16px, 2.5vw, 19px); color: rgba(255,255,255,.65); max-width: 620px; margin-bottom: 36px; line-height: 1.65; }
+.hero-ctas { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.btn-primary { background: var(--amber); color: var(--g900); padding: 16px 32px; border-radius: var(--radius-sm); font-size: 16px; font-weight: 800; text-decoration: none; border: none; cursor: pointer; transition: transform .15s, box-shadow .15s, background .15s; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.btn-primary:hover { background: var(--amber-d); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(244,162,97,.4); }
+.btn-ghost { background: transparent; color: rgba(255,255,255,.7); padding: 16px 28px; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; text-decoration: none; border: 1px solid rgba(255,255,255,.2); cursor: pointer; transition: all .15s; display: inline-flex; align-items: center; gap: 8px; }
+.btn-ghost:hover { background: rgba(255,255,255,.08); color: var(--white); border-color: rgba(255,255,255,.35); }
+.hero-trust { margin-top: 32px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center; }
+.hero-trust-item { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: rgba(255,255,255,.45); }
+
+/* PAIN SECTION — big and bold */
+.pain-block { background: var(--n900); padding: 80px 24px; }
+.pain-block-inner { max-width: 800px; margin: 0 auto; }
+.pain-intro { font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--amber); margin-bottom: 20px; }
+.pain-headline { font-size: clamp(28px, 4.5vw, 44px); font-weight: 800; color: var(--white); line-height: 1.15; letter-spacing: -.02em; margin-bottom: 40px; }
+.pain-headline em { font-style: normal; color: var(--amber); }
+.pain-questions { display: flex; flex-direction: column; gap: 0; border: 1px solid rgba(255,255,255,.08); border-radius: var(--radius); overflow: hidden; }
+.pain-q { padding: 20px 28px; border-bottom: 1px solid rgba(255,255,255,.06); display: flex; align-items: flex-start; gap: 16px; }
+.pain-q:last-child { border-bottom: none; }
+.pain-q-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--amber); flex-shrink: 0; margin-top: 8px; }
+.pain-q-text { font-size: 16px; color: rgba(255,255,255,.75); line-height: 1.6; font-weight: 500; }
+.pain-q-text strong { color: var(--white); font-weight: 700; }
+.pain-answer { margin-top: 40px; background: rgba(82,183,136,.08); border: 1px solid rgba(82,183,136,.2); border-radius: var(--radius); padding: 32px 28px; }
+.pain-answer p { font-size: 19px; font-weight: 700; color: var(--white); line-height: 1.5; }
+.pain-answer p span { color: var(--g400); }
+.pain-answer-sub { margin-top: 10px; font-size: 15px; color: rgba(255,255,255,.5); line-height: 1.65; }
+
+/* SETUP PROMISE */
+.setup-strip { background: var(--amber); padding: 28px 24px; text-align: center; }
+.setup-strip p { font-size: clamp(17px, 2.5vw, 22px); font-weight: 800; color: var(--g900); line-height: 1.4; }
+.setup-strip p span { text-decoration: underline; text-decoration-color: rgba(15,35,24,.4); text-decoration-thickness: 2px; }
+
+/* STATS STRIP */
+.stats-strip { background: var(--g50); border-bottom: 1px solid rgba(26,58,46,.08); padding: 32px 24px; }
+.stats-strip-inner { max-width: 960px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0; }
+.stat-item { padding: 12px 24px; text-align: center; }
+.stat-item + .stat-item { border-left: 1px solid rgba(26,58,46,.1); }
+.stat-num { font-size: 32px; font-weight: 800; color: var(--g800); line-height: 1; }
+.stat-num span { color: var(--amber); }
+.stat-desc { font-size: 12px; color: var(--n500); margin-top: 4px; line-height: 1.4; }
+
+/* SECTION */
+section { padding: 80px 24px; }
+.sec-inner { max-width: 960px; margin: 0 auto; }
+.sec-tag { font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--g700); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.sec-tag::before { content: ''; width: 24px; height: 2px; background: var(--g500); border-radius: 1px; display: block; }
+.sec-h { font-size: clamp(26px, 4vw, 38px); font-weight: 800; line-height: 1.15; color: var(--g800); letter-spacing: -.02em; margin-bottom: 16px; }
+.sec-h em { font-style: normal; color: var(--g700); }
+.sec-p { font-size: 17px; color: var(--n500); line-height: 1.7; max-width: 560px; }
+
+/* COMO FUNCIONA — 5 MINUTES */
+.how { background: var(--white); }
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 56px; position: relative; }
+.steps::before { content: ''; position: absolute; top: 32px; left: 15%; right: 15%; height: 2px; background: linear-gradient(90deg, var(--g200), var(--g500), var(--g200)); z-index: 0; }
+.step { background: var(--white); border: 1px solid var(--n300); border-radius: var(--radius); padding: 32px 24px; text-align: center; position: relative; z-index: 1; transition: transform .2s, box-shadow .2s, border-color .2s; }
+.step:hover { transform: translateY(-4px); box-shadow: var(--shadow); border-color: var(--g200); }
+.step-num { width: 52px; height: 52px; border-radius: 50%; background: var(--g800); color: var(--white); font-size: 20px; font-weight: 800; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+.step h3 { font-size: 17px; font-weight: 700; color: var(--g800); margin-bottom: 10px; }
+.step p { font-size: 14px; color: var(--n500); line-height: 1.65; }
+.step-badge { display: inline-block; margin-top: 16px; background: var(--g50); color: var(--g700); font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 100px; border: 1px solid var(--g200); }
+.step.highlight { border-color: var(--amber); background: linear-gradient(135deg, var(--amber-l) 0%, var(--white) 60%); }
+.step.highlight .step-num { background: var(--amber-d); }
+
+/* DIFERENCIAIS */
+.diff { background: var(--g800); padding: 80px 24px; }
+.diff .sec-tag { color: var(--g400); }
+.diff-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 48px; }
+.diff-card { background: rgba(255,255,255,.05); border: 1px solid rgba(82,183,136,.12); border-radius: var(--radius); padding: 28px 24px; transition: background .2s, border-color .2s; }
+.diff-card:hover { background: rgba(255,255,255,.08); border-color: rgba(82,183,136,.25); }
+.diff-card.amber-card { border-color: rgba(244,162,97,.25); background: rgba(244,162,97,.06); }
+.diff-card.amber-card:hover { background: rgba(244,162,97,.1); }
+.diff-icon { width: 44px; height: 44px; border-radius: 12px; background: rgba(82,183,136,.12); border: 1px solid rgba(82,183,136,.15); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+.diff-card.amber-card .diff-icon { background: rgba(244,162,97,.15); border-color: rgba(244,162,97,.2); }
+.diff-card h3 { font-size: 17px; font-weight: 700; color: var(--white); margin-bottom: 8px; }
+.diff-card p { font-size: 14px; color: rgba(255,255,255,.5); line-height: 1.65; }
+.diff-pill { display: inline-block; margin-top: 14px; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 100px; letter-spacing: .06em; text-transform: uppercase; }
+.diff-pill.green { background: rgba(82,183,136,.12); color: var(--g400); border: 1px solid rgba(82,183,136,.2); }
+.diff-pill.amber { background: rgba(244,162,97,.12); color: var(--amber); border: 1px solid rgba(244,162,97,.2); }
+
+/* REPORTS SECTION */
+.reports { background: var(--n50); padding: 80px 24px; }
+.reports-inner { max-width: 960px; margin: 0 auto; }
+.reports-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 52px; align-items: start; }
+.report-cards { display: flex; flex-direction: column; gap: 16px; }
+.report-card { background: var(--white); border: 1px solid var(--n300); border-radius: var(--radius); padding: 24px 28px; display: flex; align-items: flex-start; gap: 18px; transition: transform .2s, box-shadow .2s; }
+.report-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+.report-icon { width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.report-icon.green { background: var(--g50); border: 1px solid var(--g200); }
+.report-icon.amber { background: var(--amber-l); border: 1px solid rgba(244,162,97,.3); }
+.report-card h4 { font-size: 15px; font-weight: 700; color: var(--n900); margin-bottom: 6px; }
+.report-card p { font-size: 13px; color: var(--n500); line-height: 1.6; }
+.reports-highlight { background: var(--g800); border-radius: var(--radius); padding: 40px 32px; color: var(--white); }
+.reports-highlight h3 { font-size: clamp(22px, 3vw, 30px); font-weight: 800; color: var(--white); line-height: 1.2; margin-bottom: 16px; letter-spacing: -.01em; }
+.reports-highlight h3 em { color: var(--amber); font-style: normal; }
+.reports-highlight p { font-size: 15px; color: rgba(255,255,255,.55); line-height: 1.7; margin-bottom: 28px; }
+.reports-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+.reports-li { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: rgba(255,255,255,.7); line-height: 1.5; }
+.reports-li::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--g500); flex-shrink: 0; margin-top: 6px; }
+
+/* DATA SECTION */
+.data-sec { background: var(--white); padding: 80px 24px; }
+.data-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; margin-top: 48px; }
+.data-card { background: var(--n50); border: 1px solid var(--n300); border-radius: var(--radius); padding: 28px; text-align: center; }
+.data-big { font-size: 44px; font-weight: 800; color: var(--g800); line-height: 1; letter-spacing: -.02em; }
+.data-big span { color: var(--amber); }
+.data-label { font-size: 14px; font-weight: 600; color: var(--n700); margin: 10px 0 6px; }
+.data-sub { font-size: 12px; color: var(--n500); line-height: 1.5; }
+.data-src { font-size: 10px; color: var(--n300); margin-top: 8px; }
+.data-sebrae { background: var(--g800); border-radius: var(--radius); padding: 32px; margin-top: 24px; text-align: center; }
+.data-sebrae p { font-size: 18px; font-weight: 700; color: var(--white); line-height: 1.5; }
+.data-sebrae p em { color: var(--amber); font-style: italic; }
+.data-sebrae span { font-size: 13px; color: rgba(255,255,255,.45); display: block; margin-top: 8px; }
+
+/* PRICING */
+.pricing { background: var(--g50); padding: 80px 24px; }
+.pricing-card { max-width: 500px; margin: 0 auto; background: var(--white); border: 2px solid var(--g500); border-radius: 24px; padding: 44px; text-align: center; box-shadow: var(--shadow-lg); position: relative; overflow: hidden; }
+.pricing-card::before { content: ''; position: absolute; top: -60px; right: -60px; width: 200px; height: 200px; background: radial-gradient(circle, rgba(82,183,136,.1), transparent 70%); pointer-events: none; }
+.pricing-badge { display: inline-block; margin-bottom: 20px; background: var(--g50); color: var(--g700); border: 1px solid var(--g200); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 6px 16px; border-radius: 100px; }
+.trial-note { font-size: 15px; font-weight: 700; color: var(--g600); margin-bottom: 28px; }
+.pricing-price { margin: 20px 0 28px; }
+.pricing-price .setup-fee { font-size: 14px; color: var(--n500); margin-bottom: 6px; }
+.monthly { font-size: 56px; font-weight: 800; color: var(--g800); line-height: 1; letter-spacing: -.03em; }
+.monthly sup { font-size: 24px; vertical-align: super; font-weight: 700; }
+.monthly sub { font-size: 16px; vertical-align: baseline; font-weight: 600; color: var(--n500); }
+.per-day { font-size: 13px; color: var(--n500); margin-top: 8px; }
+.pricing-features { text-align: left; margin: 28px 0 36px; display: flex; flex-direction: column; gap: 12px; }
+.pricing-feat { display: flex; align-items: flex-start; gap: 12px; font-size: 15px; color: var(--n700); }
+.check { width: 20px; height: 20px; border-radius: 50%; background: var(--g50); border: 1.5px solid var(--g500); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+
+/* TESTIMONY */
+.testimony { background: var(--n50); padding: 80px 24px; }
+.testimony-card { background: var(--white); border-radius: 20px; padding: 40px; border: 1px solid var(--n300); box-shadow: var(--shadow); max-width: 680px; margin: 48px auto 0; }
+.testimony-quote { font-size: 20px; font-weight: 700; color: var(--g800); line-height: 1.5; margin-bottom: 24px; }
+.testimony-quote::before { content: '\201C'; color: var(--amber); font-size: 48px; line-height: 0; vertical-align: -.5em; margin-right: 4px; }
+.testimony-author { display: flex; align-items: center; gap: 16px; }
+.testimony-avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--g200); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.testimony-name { font-size: 15px; font-weight: 700; color: var(--n900); }
+.testimony-role { font-size: 13px; color: var(--n500); }
+.testimony-stars { color: var(--amber); font-size: 14px; margin-bottom: 4px; }
+
+/* FAQ */
+.faq { background: var(--white); padding: 80px 24px; }
+.faq-list { margin-top: 48px; display: flex; flex-direction: column; gap: 12px; max-width: 720px; }
+.faq-item { border: 1px solid var(--n300); border-radius: var(--radius-sm); overflow: hidden; }
+.faq-q { padding: 20px 24px; cursor: pointer; font-size: 16px; font-weight: 600; color: var(--n900); display: flex; justify-content: space-between; align-items: center; gap: 16px; user-select: none; transition: background .15s; }
+.faq-q:hover { background: var(--n50); }
+.faq-q .ico { width: 28px; height: 28px; border-radius: 50%; background: var(--g50); border: 1px solid var(--g200); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 18px; color: var(--g700); transition: transform .2s; line-height: 1; }
+.faq-a { padding: 0 24px; max-height: 0; overflow: hidden; font-size: 15px; color: var(--n500); line-height: 1.7; transition: max-height .3s ease, padding .3s ease; }
+.faq-item.open .faq-a { max-height: 300px; padding: 0 24px 20px; }
+.faq-item.open .faq-q .ico { transform: rotate(45deg); }
+
+/* FINAL CTA */
+.final-cta { background: var(--g800); padding: 80px 24px; text-align: center; position: relative; overflow: hidden; }
+.final-cta::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 700px 500px at 50% 150%, rgba(82,183,136,.2) 0%, transparent 70%); pointer-events: none; }
+.final-cta-inner { max-width: 700px; margin: 0 auto; position: relative; z-index: 1; }
+.final-cta h2 { font-size: clamp(30px, 5vw, 48px); font-weight: 800; color: var(--white); line-height: 1.15; letter-spacing: -.02em; margin-bottom: 20px; }
+.final-cta h2 em { color: var(--amber); font-style: normal; }
+.final-cta p { font-size: 17px; color: rgba(255,255,255,.6); margin-bottom: 36px; line-height: 1.65; }
+.final-note { margin-top: 20px; font-size: 13px; color: rgba(255,255,255,.35); }
+
+/* FOOTER */
+footer { background: var(--g900); padding: 40px 24px; text-align: center; color: rgba(255,255,255,.4); font-size: 13px; }
+footer a { color: rgba(255,255,255,.6); text-decoration: none; }
+footer a:hover { color: var(--g400); }
+.footer-logo { display: flex; align-items: center; gap: 8px; justify-content: center; color: rgba(255,255,255,.7); font-weight: 800; font-size: 15px; margin-bottom: 16px; }
+.footer-links { display: flex; gap: 24px; justify-content: center; margin-bottom: 16px; flex-wrap: wrap; }
+
+/* WA FLOAT */
+.wa-float { position: fixed; bottom: 28px; right: 28px; z-index: 200; display: flex; align-items: center; }
+.wa-btn { width: 60px; height: 60px; border-radius: 50%; background: #25D366; color: var(--white); display: flex; align-items: center; justify-content: center; text-decoration: none; box-shadow: 0 6px 24px rgba(37,211,102,.4); transition: transform .2s, box-shadow .2s; animation: wa-pulse 3s ease-in-out infinite; }
+.wa-btn:hover { transform: scale(1.08); box-shadow: 0 8px 32px rgba(37,211,102,.5); }
+.wa-tooltip { position: absolute; right: 72px; background: var(--n900); color: var(--white); font-size: 13px; font-weight: 600; white-space: nowrap; padding: 8px 14px; border-radius: 10px; opacity: 0; transform: translateX(8px); transition: opacity .2s, transform .2s; pointer-events: none; }
+.wa-float:hover .wa-tooltip { opacity: 1; transform: translateX(0); }
+.wa-tooltip::after { content: ''; position: absolute; right: -6px; top: 50%; transform: translateY(-50%); border: 6px solid transparent; border-left-color: var(--n900); border-right: 0; }
+@keyframes wa-pulse { 0%,100% { box-shadow: 0 6px 24px rgba(37,211,102,.4); } 50% { box-shadow: 0 6px 32px rgba(37,211,102,.6), 0 0 0 8px rgba(37,211,102,.08); } }
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  section, .pain-block, .diff, .reports, .data-sec, .pricing, .testimony, .faq, .final-cta { padding: 56px 20px; }
+  .steps { grid-template-columns: 1fr; gap: 16px; }
+  .steps::before { display: none; }
+  .diff-grid { grid-template-columns: 1fr; }
+  .reports-grid { grid-template-columns: 1fr; }
+  .data-grid { grid-template-columns: 1fr 1fr; }
+  .stat-item + .stat-item { border-left: none; border-top: 1px solid rgba(26,58,46,.1); }
+  .pricing-card { padding: 32px 24px; }
+}
+@media (max-width: 480px) {
+  .hero { padding: 56px 20px 48px; }
+  .hero-ctas { flex-direction: column; align-items: stretch; }
+  .btn-primary, .btn-ghost { justify-content: center; }
+  .data-grid { grid-template-columns: 1fr; }
+  .wa-tooltip { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<div class="nav-wrap">
+  <div class="nav-inner">
+    <a href="#" class="logo">
+      <svg width="28" height="28" viewBox="0 0 50 50" fill="none">
+        <circle cx="25" cy="25" r="23" fill="#2D6A4F" stroke="#52B788" stroke-width="0.8"/>
+        <path d="M11 37L11 14L25 26" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <line x1="39" y1="14" x2="39" y2="37" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        <path d="M25 26L39 14L46 7" stroke="#F4A261" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+      MeuSócio
+    </a>
+    <a href="#teste" class="btn-nav">Testar 7 dias grátis →</a>
+  </div>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <h1>
+      Você trabalha o dia todo.<br>
+      Sua gestão trabalha<br>
+      <em>sozinha enquanto você descansa.</em>
+    </h1>
+    <p class="hero-sub">
+      Configure uma vez em 5 minutos. Depois é só usar como agenda. O MeuSócio cuida do resto — relatórios, cobranças, lembretes, previsão de faturamento — tudo automático.
+    </p>
+    <div class="hero-ctas">
+      <a href="#teste" class="btn-primary">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/></svg>
+        Testar 7 dias grátis
+      </a>
+      <a href="https://wa.me/5521997302942?text=Oi!%20Quero%20saber%20mais%20sobre%20o%20MeuS%C3%B3cio" target="_blank" class="btn-ghost">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Tirar uma dúvida
+      </a>
+    </div>
+    <div class="hero-trust">
+      <div class="hero-trust-item">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="#52B788" stroke-width="2.5" stroke-linecap="round"/></svg>
+        Configuração em 5 minutos
+      </div>
+      <div class="hero-trust-item">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="#52B788" stroke-width="2.5" stroke-linecap="round"/></svg>
+        Sem cartão de crédito
+      </div>
+      <div class="hero-trust-item">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="#52B788" stroke-width="2.5" stroke-linecap="round"/></svg>
+        Funciona no celular
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PAIN BLOCK -->
+<div class="pain-block">
+  <div class="pain-block-inner">
+    <div class="pain-intro">Isso acontece com você?</div>
+    <h2 class="pain-headline">
+      Você trabalha o dia inteiro.<br>
+      Chega em casa e ainda tem que<br>
+      <em>fazer tudo isso na mão?</em>
+    </h2>
+    <div class="pain-questions">
+      <div class="pain-q">
+        <div class="pain-q-dot"></div>
+        <div class="pain-q-text">Ainda <strong>preenche planilha</strong> no final do dia pra saber quanto entrou — quando lembra de preencher?</div>
+      </div>
+      <div class="pain-q">
+        <div class="pain-q-dot"></div>
+        <div class="pain-q-text">Fica <strong>lembrando cliente no WhatsApp</strong> um a um, na mão, toda semana?</div>
+      </div>
+      <div class="pain-q">
+        <div class="pain-q-dot"></div>
+        <div class="pain-q-text"><strong>Confirma atendimento manualmente</strong> — e ainda assim o cliente falta sem avisar?</div>
+      </div>
+      <div class="pain-q">
+        <div class="pain-q-dot"></div>
+        <div class="pain-q-text">No final do mês faz <strong>conta no papel pra saber se a conta vai fechar</strong> — e muitas vezes não fecha?</div>
+      </div>
+      <div class="pain-q">
+        <div class="pain-q-dot"></div>
+        <div class="pain-q-text"><strong>Não tem a menor ideia de quanto vai faturar</strong> no próximo mês — e fica no susto todo dia 1º?</div>
+      </div>
+      <div class="pain-q">
+        <div class="pain-q-dot"></div>
+        <div class="pain-q-text">Sabe que tem cliente sumida há meses, mas <strong>não sabe quem, quantas e quanto isso está custando</strong>?</div>
+      </div>
+      <div class="pain-q">
+        <div class="pain-q-dot"></div>
+        <div class="pain-q-text">No aniversário da cliente <strong>não manda nada porque não tem isso anotado em lugar nenhum</strong>?</div>
+      </div>
+    </div>
+    <div class="pain-answer">
+      <p>Não é falta de disciplina. <span>É falta de ferramenta certa.</span></p>
+      <p class="pain-answer-sub">Você não deveria fazer tudo isso manualmente. O MeuSócio faz por você — e você só usa como uma agenda comum no dia a dia.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SETUP STRIP -->
+<div class="setup-strip">
+  <p>Configure <span>uma vez em 5 minutos</span>. Depois é só agendar e confirmar cliente. O sistema trabalha sozinho.</p>
+</div>
+
+<!-- STATS STRIP -->
+<div class="stats-strip">
+  <div class="stats-strip-inner">
+    <div class="stat-item">
+      <div class="stat-num">+1<span>M</span></div>
+      <div class="stat-desc">MEIs no setor de beleza<br>no Brasil (Sebrae)</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">700<span>+</span></div>
+      <div class="stat-desc">novos negócios de beleza<br>abertos por dia em 2024</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">R$<span>242</span>B</div>
+      <div class="stat-desc">movimentados pelo setor<br>de beleza em 2025</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num"><span>81</span>%</div>
+      <div class="stat-desc">dos cabeleireiros são MEI<br>— sem gestão profissional</div>
+    </div>
+  </div>
+</div>
+
+<!-- COMO FUNCIONA -->
+<section class="how">
+  <div class="sec-inner">
+    <div class="sec-tag">Como funciona</div>
+    <h2 class="sec-h">Simples assim:<br><em>5 minutos uma vez. Pronto.</em></h2>
+    <p class="sec-p">Você não precisa aprender sistema. Não tem curso, não tem manual. Se você usa WhatsApp, você usa o MeuSócio.</p>
+
+    <div class="steps">
+      <div class="step highlight">
+        <div class="step-num">1</div>
+        <h3>Configure em 5 minutos</h3>
+        <p>Nome do negócio, serviços que você oferece, valores. Só isso. Cadastre suas primeiras clientes e pronto — o sistema já começa a trabalhar.</p>
+        <span class="step-badge">⏱ 5 min no total</span>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Use como agenda normal</h3>
+        <p>No dia a dia você só agenda e confirma cliente. É isso. Uma tela simples, igual ao WhatsApp — sem nada complicado.</p>
+        <span class="step-badge">📋 Só agendar e confirmar</span>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>O sistema faz o resto</h3>
+        <p>Relatórios, lembretes, previsão de faturamento, acompanhamento de meta — tudo montado sozinho, em tempo real, sem você tocar em nada.</p>
+        <span class="step-badge">🤖 100% automático</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DIFERENCIAIS -->
+<section class="diff">
+  <div class="sec-inner">
+    <div class="sec-tag" style="color:var(--g400);">O que o MeuSócio faz por você</div>
+    <h2 class="sec-h" style="color:var(--white);">Mais que uma agenda.<br><em style="color:var(--amber)">Um sócio de verdade.</em></h2>
+    <p class="sec-p" style="color:rgba(255,255,255,.5);">Tudo que um sócio de negócios faria por você — sem precisar dividir o lucro.</p>
+
+    <div class="diff-grid">
+      <div class="diff-card amber-card">
+        <div class="diff-icon">
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6" stroke="#F4A261" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h3>Relatórios que se montam sozinhos</h3>
+        <p>Faturamento do mês, serviços mais rentáveis, dias e horários com mais atendimento, custo de materiais, lucro real — tudo calculado automaticamente enquanto você atende.</p>
+        <span class="diff-pill amber">Sem planilha</span>
+      </div>
+      <div class="diff-card amber-card">
+        <div class="diff-icon">
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="#F4A261" stroke-width="2"/><polyline points="12 6 12 12 16 14" stroke="#F4A261" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <h3>Previsão de faturamento do mês</h3>
+        <p>Veja quanto vai entrar baseado nos agendamentos confirmados. Chega de susto no dia 1º. Você sabe quanto vai ganhar antes do mês terminar.</p>
+        <span class="diff-pill amber">Previsão em tempo real</span>
+      </div>
+      <div class="diff-card">
+        <div class="diff-icon">
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke="#52B788" stroke-width="2" stroke-linecap="round"/><polyline points="22 4 12 14.01 9 11.01" stroke="#52B788" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h3>Metas e acompanhamento</h3>
+        <p>Configure sua meta mensal de faturamento e acompanhe em tempo real se está no caminho certo. O sistema mostra quanto falta e quantos atendimentos você precisa.</p>
+        <span class="diff-pill green">Acompanhamento visual</span>
+      </div>
+      <div class="diff-card">
+        <div class="diff-icon">
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8a19.79 19.79 0 01-3.07-8.67A2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z" stroke="#52B788" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h3>Confirmação automática via WhatsApp</h3>
+        <p>O sistema avisa a cliente do agendamento pelo WhatsApp. Ela confirma sem você precisar ligar ou mandar mensagem. Zero esforço da sua parte.</p>
+        <span class="diff-pill green">Automático</span>
+      </div>
+      <div class="diff-card">
+        <div class="diff-icon">
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" stroke="#52B788" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" stroke="#52B788" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h3>Link de agendamento público</h3>
+        <p>Sua cliente acessa um link e agenda sozinha, sem você precisar ficar trocando mensagem. Compartilha no Instagram e no WhatsApp — e a agenda se preenche automática.</p>
+        <span class="diff-pill green">Auto-agendamento</span>
+      </div>
+      <div class="diff-card amber-card">
+        <div class="diff-icon">
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" stroke="#F4A261" stroke-width="2"/><line x1="8" y1="21" x2="16" y2="21" stroke="#F4A261" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="17" x2="12" y2="21" stroke="#F4A261" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <h3>App com a sua identidade visual</h3>
+        <p>Configure as cores e o nome do seu negócio. Sua cliente vê um sistema com a cara do seu salão — não da marca de outra empresa. Profissionalismo do início ao fim.</p>
+        <span class="diff-pill amber">Personalizado</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REPORTS DEEP DIVE -->
+<section class="reports">
+  <div class="reports-inner">
+    <div class="sec-tag">Relatórios automáticos</div>
+    <h2 class="sec-h">Você sabe exatamente onde<br>está <em>ganhando mais — e por quê.</em></h2>
+    <p class="sec-p">Sem planilha. Sem calculadora. Só agende e confirme. O MeuSócio monta tudo em tempo real.</p>
+
+    <div class="reports-grid">
+      <div class="report-cards">
+        <div class="report-card">
+          <div class="report-icon green">
+            <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23" stroke="#2D6A4F" stroke-width="2" stroke-linecap="round"/><path d="M17 5H9.5a3.5 3.5 0 100 7h5a3.5 3.5 0 110 7H6" stroke="#2D6A4F" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
+          <div>
+            <h4>Faturamento real vs previsto</h4>
+            <p>Quanto já entrou, quanto ainda vai entrar e quanto você esperava ganhar — lado a lado, sem fazer conta nenhuma.</p>
+          </div>
+        </div>
+        <div class="report-card">
+          <div class="report-icon amber">
+            <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" stroke="#e07d30" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><polyline points="17 6 23 6 23 12" stroke="#e07d30" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div>
+            <h4>Serviços mais rentáveis</h4>
+            <p>Descubra qual serviço te dá mais lucro de verdade — considerando o tempo gasto e o custo do material. Às vezes o que parece mais barato é o que mais rende.</p>
+          </div>
+        </div>
+        <div class="report-card">
+          <div class="report-icon green">
+            <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" stroke="#2D6A4F" stroke-width="2"/><path d="M16 2v4M8 2v4M3 10h18" stroke="#2D6A4F" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
+          <div>
+            <h4>Dias e horários de pico</h4>
+            <p>Veja quais dias e horários são mais cheios — e quais ficam ociosos. Decida quando abrir agenda, quando ligar para clientes, quando dar desconto.</p>
+          </div>
+        </div>
+        <div class="report-card">
+          <div class="report-icon amber">
+            <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="#e07d30" stroke-width="2" stroke-linecap="round"/><circle cx="9" cy="7" r="4" stroke="#e07d30" stroke-width="2"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="#e07d30" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
+          <div>
+            <h4>Clientes ativas, inativas e em risco</h4>
+            <p>O sistema classifica automaticamente quem está frequentando, quem sumiu e quem está prestes a sumir — com o valor que cada uma representa no seu caixa.</p>
+          </div>
+        </div>
+      </div>
+      <div class="reports-highlight">
+        <h3>Você sempre soube<br>quanto <em>vai ganhar</em><br>no próximo mês?</h3>
+        <p>A maioria dos autônomos chega no dia 1º sem saber se vai dar pra pagar as contas. Com o MeuSócio, você tem previsão de faturamento baseada nos agendamentos confirmados.</p>
+        <div class="reports-list">
+          <div class="reports-li">Meta mensal configurável — você define, o sistema acompanha</div>
+          <div class="reports-li">Barra de progresso em tempo real: quanto falta pra bater a meta</div>
+          <div class="reports-li">Projeção de fechamento do mês com base na agenda atual</div>
+          <div class="reports-li">Controle de caixa: receitas menos despesas = lucro real</div>
+          <div class="reports-li">Custo de materiais descontado automaticamente por serviço</div>
+        </div>
+        <a href="#teste" class="btn-primary" style="font-size:15px;">Ver como funciona na prática →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DATA SECTION -->
+<section class="data-sec">
+  <div class="sec-inner">
+    <div class="sec-tag">O mercado não para de crescer</div>
+    <h2 class="sec-h">O setor de beleza nunca foi<br><em>tão grande — nem tão competitivo.</em></h2>
+
+    <div class="data-grid">
+      <div class="data-card">
+        <div class="data-big">+1<span>M</span></div>
+        <div class="data-label">MEIs no setor de beleza</div>
+        <div class="data-sub">Mais de 1 milhão de profissionais — quem organizar primeiro sai na frente.</div>
+        <div class="data-src">Sebrae / IBGE 2024</div>
+      </div>
+      <div class="data-card">
+        <div class="data-big">R$<span>242</span>B</div>
+        <div class="data-label">Movimentados em 2025</div>
+        <div class="data-sub">O mercado cresceu 11,2% este ano. A demanda existe. A gestão é o gargalo.</div>
+        <div class="data-src">Cosmetic Innovation / IPC Maps 2025</div>
+      </div>
+      <div class="data-card">
+        <div class="data-big"><span>81</span>%</div>
+        <div class="data-label">Cabeleireiros sem gestão profissional</div>
+        <div class="data-sub">4 em cada 5 profissionais ainda operam no improviso. Essa é a sua vantagem.</div>
+        <div class="data-src">Fecomércio / DataSebrae 2025</div>
+      </div>
+    </div>
+    <div class="data-sebrae">
+      <p>O Sebrae recomenda: <em>"100% da gestão deste negócio deve ser digitalizada."</em></p>
+      <span>Quem digitaliza cresce. Quem improvisa estagna — mesmo atendendo bem.</span>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="teste">
+  <div class="sec-inner" style="text-align:center;">
+    <div class="sec-tag" style="justify-content:center;">Preço justo</div>
+    <h2 class="sec-h" style="margin:0 auto 16px;">Menos que uma hora de trabalho.<br>Trabalha por você 24h por dia.</h2>
+    <p class="sec-p" style="margin:0 auto 52px;">Configuração em 5 minutos. Cancele quando quiser. Sem burocracia.</p>
+
+    <div class="pricing-card">
+      <div class="pricing-badge">🎉 Oferta de lançamento</div>
+      <div class="trial-note">7 dias completamente grátis · sem cartão</div>
+      <div class="pricing-price">
+        <div class="setup-fee">+ R$89,90 de ativação (pago uma vez)</div>
+        <div class="monthly"><sup>R$</sup>39<span style="font-size:32px;font-weight:800;">,90</span><sub>/mês</sub></div>
+        <div class="per-day">Menos que R$1,33 por dia</div>
+      </div>
+      <div class="pricing-features">
+        <div class="pricing-feat"><div class="check"><svg width="10" height="10" fill="none" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke="#2D6A4F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>CRM completo de clientes</div>
+        <div class="pricing-feat"><div class="check"><svg width="10" height="10" fill="none" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke="#2D6A4F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>Link de agendamento público</div>
+        <div class="pricing-feat"><div class="check"><svg width="10" height="10" fill="none" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke="#2D6A4F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>Confirmação automática via WhatsApp</div>
+        <div class="pricing-feat"><div class="check"><svg width="10" height="10" fill="none" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke="#2D6A4F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>Relatórios automáticos (faturamento, serviços, caixa)</div>
+        <div class="pricing-feat"><div class="check"><svg width="10" height="10" fill="none" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke="#2D6A4F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>Previsão de faturamento + meta mensal</div>
+        <div class="pricing-feat"><div class="check"><svg width="10" height="10" fill="none" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke="#2D6A4F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>Lembretes de aniversário e cliente sumida</div>
+        <div class="pricing-feat"><div class="check"><svg width="10" height="10" fill="none" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke="#2D6A4F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>App com a sua identidade visual</div>
+        <div class="pricing-feat"><div class="check"><svg width="10" height="10" fill="none" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke="#2D6A4F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>Funciona no celular — sem instalar nada</div>
+      </div>
+      <a href="https://meusocio.vercel.app" class="btn-primary" style="width:100%;justify-content:center;font-size:17px;padding:18px;">
+        Começar meu teste grátis →
+      </a>
+      <div style="margin-top:14px;font-size:13px;color:var(--n500);">
+        Sem cartão agora. Sem multa pra cancelar. Sem complicação.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONY -->
+<section class="testimony">
+  <div class="sec-inner" style="text-align:center;">
+    <div class="sec-tag" style="justify-content:center;">Resultado real</div>
+    <h2 class="sec-h">Quem começou a usar,<br>não quer mais largar.</h2>
+    <div class="testimony-card">
+      <div class="testimony-stars">★★★★★</div>
+      <div class="testimony-quote">
+        Antes eu não sabia quanto tinha ganhado no mês, esquecia de lembrar cliente e ficava fazendo conta no papel. Agora eu só abro e vejo tudo pronto. Reativei 3 clientes no primeiro mês só com os lembretes automáticos.
+      </div>
+      <div class="testimony-author">
+        <div class="testimony-avatar">💅</div>
+        <div>
+          <div class="testimony-name">Bárbara Moreira</div>
+          <div class="testimony-role">Manicure • Araruama, RJ</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq">
+  <div class="sec-inner">
+    <div class="sec-tag">Dúvidas frequentes</div>
+    <h2 class="sec-h">Respostas diretas.</h2>
+    <div class="faq-list">
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Realmente só preciso de 5 minutos pra configurar?<span class="ico">+</span></div>
+        <div class="faq-a">Sim. Você coloca o nome do seu negócio, os serviços que oferece e os valores. Pronto. Pode começar a usar. Cadastrar as clientes leva mais alguns minutos, mas já dá pra usar no mesmo dia.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Preciso saber de tecnologia pra usar?<span class="ico">+</span></div>
+        <div class="faq-a">Não. Se você usa WhatsApp, você usa o MeuSócio. A tela do dia a dia é uma agenda simples — você só toca, confirma e pronto. Os relatórios aparecem sozinhos, sem você precisar fazer nada.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Os relatórios realmente se montam sozinhos?<span class="ico">+</span></div>
+        <div class="faq-a">Sim. Você só precisa registrar os atendimentos — o que você já faria em qualquer agenda. O sistema calcula faturamento, custo de materiais, lucro, serviços mais rentáveis, previsão do mês e acompanhamento de meta automaticamente. Sem planilha.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Como funciona o link de agendamento?<span class="ico">+</span></div>
+        <div class="faq-a">Você recebe um link único do seu negócio. Coloca na bio do Instagram, no WhatsApp Business, onde quiser. Sua cliente acessa, escolhe o serviço, o horário e confirma — sem você precisar trocar mensagem nenhuma. O agendamento já aparece na sua agenda.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">O app com minha identidade visual é complicado de configurar?<span class="ico">+</span></div>
+        <div class="faq-a">Não. Você escolhe as cores do seu negócio e coloca o nome. Em minutos o sistema já aparece com a cara do seu salão pra quando a cliente acessa o link de agendamento.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Posso cancelar quando quiser?<span class="ico">+</span></div>
+        <div class="faq-a">Sim. Sem ligação, sem multa, sem burocracia. Você cancela pelo próprio sistema em dois cliques. Seus dados ficam disponíveis por 30 dias após o cancelamento.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Ainda tenho dúvida. Com quem falo?<span class="ico">+</span></div>
+        <div class="faq-a">Com o João, fundador do MeuSócio. Clica no botão verde do WhatsApp — ele responde pessoalmente, sem chatbot, sem atendente. Se o MeuSócio não for pra você, ele te diz também.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="final-cta">
+  <div class="final-cta-inner">
+    <h2>Configure uma vez.<br>Descanse o <em>resto do ano.</em></h2>
+    <p>5 minutos de configuração. 7 dias de teste grátis. Depois você decide — sem pressão.</p>
+    <a href="https://meusocio.vercel.app" class="btn-primary" style="font-size:17px;padding:18px 40px;">
+      Quero meu sócio agora →
+    </a>
+    <div class="final-note">Sem cartão · Sem burocracia · Cancele quando quiser</div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">
+    <svg width="22" height="22" viewBox="0 0 50 50" fill="none">
+      <circle cx="25" cy="25" r="23" fill="#2D6A4F" stroke="#52B788" stroke-width="0.8"/>
+      <path d="M11 37L11 14L25 26" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <line x1="39" y1="14" x2="39" y2="37" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      <path d="M25 26L39 14L46 7" stroke="#F4A261" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </svg>
+    MeuSócio
+  </div>
+  <div class="footer-links">
+    <a href="#">Política de Privacidade</a>
+    <a href="#">Termos de Uso</a>
+    <a href="https://wa.me/5521997302942" target="_blank">WhatsApp</a>
+    <a href="https://meusocio.vercel.app">Acessar sistema</a>
+  </div>
+  <div>© 2025 MeuSócio · O sócio que todo autônomo merecia ter.</div>
+</footer>
+
+<!-- WHATSAPP FLOAT -->
+<div class="wa-float">
+  <div class="wa-tooltip">Falar com o João</div>
+  <a href="https://wa.me/5521997302942?text=Oi!%20Quero%20saber%20mais%20sobre%20o%20MeuS%C3%B3cio" target="_blank" class="wa-btn" aria-label="Falar pelo WhatsApp">
+    <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+  </a>
+</div>
+
+<script>
+function toggleFaq(el) {
+  const item = el.closest('.faq-item');
+  const isOpen = item.classList.contains('open');
+  document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+  if (!isOpen) item.classList.add('open');
+}
+</script>
+</body>
+</html>
